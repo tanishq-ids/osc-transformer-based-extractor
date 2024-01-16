@@ -1,5 +1,5 @@
 [project]
-name = "osc-data-extractor"
+name = "osc-transformer-based-extractor"
 version = "0.1.0"
 description = "OS-Climate Data Extraction Tool"
 authors = [
@@ -42,7 +42,7 @@ build-backend = "pdm.backend"
 license-files = ["LICENSES.txt"]
 
 [project.scripts]
-osc-data-extractor = "osc_data_extractor.skeleton:run"
+osc-transformer-based-extractor = "osc_data_extractor.skeleton:run"
 
 [project.optional-dependencies]
   dev = [
@@ -55,6 +55,8 @@ test = [
   "pytest",
   "pytest-cov",
 ]
+
+[tool.setuptools_scm]
 
 [tool.pdm.scripts]
 pre_release = "scripts/dev-versioning.sh"
@@ -83,7 +85,7 @@ source = ["src"]
 
 [tool.yapf]
 blank_line_before_nested_class_or_def = true
-column_limit = 88
+column_limit = 120
 
 [tool.black]
 line-length = 120
@@ -92,7 +94,7 @@ line-length = 120
 profile = "black"
 
 [tool.flake8]
-max-line-length = "120"
+max-line-length = 120
 extend-ignore = [
   "E501",
 ]
