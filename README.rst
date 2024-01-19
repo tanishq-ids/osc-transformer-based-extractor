@@ -9,15 +9,15 @@
 
 .. image:: https://img.shields.io/badge/GitHub-100000?logo=github&logoColor=white
   :alt: Source code on GitHub
-  :target: https://github.com/ModeSevenIndustrialSolutions/osc-data-extractor
+  :target: https://github.com/ModeSevenIndustrialSolutions/osc-transformer-based-extractor
 
-.. image:: https://img.shields.io/pypi/v/osc-data-extractor.svg
+.. image:: https://img.shields.io/pypi/v/osc-transformer-based-extractor.svg
   :alt: PyPI package
-  :target: https://pypi.org/project/osc-data-extractor/
+  :target: https://pypi.org/project/osc-transformer-based-extractor/
 
-.. image:: https://api.cirrus-ci.com/github/os-climate/osc-data-extractor.svg?branch=main
+.. image:: https://api.cirrus-ci.com/github/os-climate/osc-transformer-based-extractor.svg?branch=main
   :alt: Built Status
-  :target: https://cirrus-ci.com/github/os-climate/osc-data-extractor
+  :target: https://cirrus-ci.com/github/os-climate/osc-transformer-based-extractor
 
 .. image:: https://img.shields.io/badge/PDM-Project-purple
   :alt: Built using PDM
@@ -30,7 +30,7 @@
 
 
 ==================
-osc-data-extractor
+osc-transformer-based-extractor
 ==================
 
 OS-Climate Data Extraction Tool
