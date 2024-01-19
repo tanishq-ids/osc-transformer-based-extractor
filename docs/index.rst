@@ -1,8 +1,8 @@
 ==================
-osc-data-extractor
+osc-transformer-based-extractor
 ==================
 
-This is the documentation of **osc-data-extractor**.
+This is the documentation of **osc-transformer-based-extractor**.
 
 .. note::
 
