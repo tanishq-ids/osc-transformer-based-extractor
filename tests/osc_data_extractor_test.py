@@ -1,5 +1,4 @@
 import pytest
-
 from osc_transformer_based_extractor.skeleton import fib, main
 
 __author__ = "Matthew Watkins"
