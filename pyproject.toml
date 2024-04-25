@@ -25,6 +25,14 @@ classifiers = [
   "Topic :: Scientific/Engineering",
   "Topic :: Software Development",
 ]
+dependencies = [
+    "torch>=2.2.2",
+    "pandas>=2.2.2",
+    "tokenizers>=0.19.1",
+    "ipykernel>=6.29.4",
+    "transformers>=4.40.0",
+    "pre-commit>=3.7.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/os-climate/osc-transformer-based-extractor"

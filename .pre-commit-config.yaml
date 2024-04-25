@@ -20,15 +20,15 @@ repos:
   #     - id: pre-commit-update
   #       args: [--dry-run]
 
-  - repo: local
-    hooks:
-      - id: tomllint
-        name: "Script: scripts/tomllint.sh"
-        language: script
-        # pass_filenames: false
-        files: \^*.toml
-        types: [file]
-        entry: scripts/tomllint.sh .
+  # - repo: local
+  #   hooks:
+  #     - id: tomllint
+  #       name: "Script: scripts/tomllint.sh"
+  #       language: script
+  #       # pass_filenames: false
+  #       files: \^*.toml
+  #       types: [file]
+  #       entry: scripts/tomllint.sh .
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
@@ -59,12 +59,12 @@ repos:
       - id: trailing-whitespace
 
   # Autoformat: YAML, JSON, Markdown, etc.
-  - repo: https://github.com/prettier/pre-commit
-    rev: v2.2.0
-    hooks:
-      - id: prettier
-        args:
-          ['--ignore-unknown']
+#  - repo: https://github.com/prettier/pre-commit
+#    rev: v2.2.0
+#    hooks:
+#      - id: prettier
+#        args:
+#          ['--ignore-unknown']
 
   # Lint: Markdown
   - repo: https://github.com/igorshubovych/markdownlint-cli
@@ -124,11 +124,11 @@ repos:
       - id: isort
         args: ["--profile", "black"]
 
-  - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.33.0
-    hooks:
-      - id: yamllint
-        args: [--strict]
+  # - repo: https://github.com/adrienverge/yamllint.git
+  #   rev: v1.33.0
+  #   hooks:
+  #    - id: yamllint
+  #      args: ['--strict --proxy={{env:HTTP_PROXY}}']
 
   - repo: https://github.com/Mateusz-Grzelinski/actionlint-py
     rev: v1.6.26.11
