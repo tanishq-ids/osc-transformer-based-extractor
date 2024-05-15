@@ -1,10 +1,7 @@
-"""
-Module: inference_utils
-Author: Tanishq-ids
+"""This module contains utility functions for performing inference using pre-trained sequence classification models."""
 
-This module contains utility functions for performing inference
-using pre-trained sequence classification models.
-"""
+# Module: inference_utils
+# Author: Tanishq-ids
 
 import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer

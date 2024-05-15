@@ -1,3 +1,5 @@
+"""Generate training data based on curator data and KPI mapping."""
+
 import os
 
 import pandas as pd
