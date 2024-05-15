@@ -25,6 +25,14 @@ classifiers = [
   "Topic :: Scientific/Engineering",
   "Topic :: Software Development",
 ]
+dependencies = [
+    "torch>=2.2.2",
+    "pandas>=2.2.2",
+    "tokenizers>=0.19.1",
+    "ipykernel>=6.29.4",
+    "transformers>=4.40.0",
+    "pre-commit>=3.7.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/os-climate/osc-transformer-based-extractor"
@@ -61,14 +69,14 @@ test = [
 [tool.pdm.scripts]
 pre_release = "scripts/dev-versioning.sh"
 release = "scripts/release-versioning.sh"
-test = "pytest"
+test = ["pdm[pytest]", "pytest-cov"]
 tox = "tox"
 docs = { shell = "cd docs && mkdocs serve", help = "Start the dev server for doc preview" }
 lint = "pre-commit run --all-files"
 complete = { call = "tasks.complete:main", help = "Create autocomplete files for bash and fish" }
 
 [tool.pdm.dev-dependencies]
-test = ["pdm[pytest]", "pytest", "pytest-cov"]
+test = ["pdm[pytest]", "pytest-cov"]
 tox = ["tox", "tox-pdm>=0.5"]
 docs = ["sphinx>=7.2.6", "sphinx-copybutton>=0.5.2"]
 dev = ["tox>=4.11.3", "tox-pdm>=0.7.0"]
