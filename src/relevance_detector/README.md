@@ -5,6 +5,61 @@
 
 This folder contains a set of scripts and notebooks designed to process data, train a sentence transformer model, and perform inferences to detect the relevance of folder contents. Below is a detailed description of each file and folder included in this repository.
 
+## How to Use This Repository
+
+1. **Prepare Training Data**:
+   - If you have CSV data from the curator module, run `make_training_data_from_curator.py` to process and save it in the `Data` folder.
+   - Alternatively, you can use `make_sample_training_data.ipynb` to generate sample data from a sample CSV file.
+
+2. **Train the Model**:
+   - Use `train_sentence_transformer.ipynb` or `train_sentence_transformer.py` to train a sentence transformer model with the processed data from the `Data` folder and save it locally. Follow the steps in the notebook or script to configure and start the training process.
+   
+   - To train the model using function calling
+      ```python
+     from train_sentence_transformer import fine_tune_model
+     fine_tune_model(
+         data_path="data/train_data.csv",
+         model_name="sentence-transformers/all-MiniLM-L6-v2",
+         num_labels=2,
+         max_length=512,
+         epochs=2,
+         batch_size=4,
+         output_dir="./saved_models_during_training",
+         save_steps=500
+     )
+     ```
+     **Parameters**:
+       - `data_path (str)`: Path to the training data CSV file.
+       - `model_name (str)`: Pre-trained model name from HuggingFace.
+       - `num_labels (int)`: Number of labels for the classification task.
+       - `max_length (int)`: Maximum sequence length.
+       - `epochs (int)`: Number of training epochs.
+       - `batch_size (int)`: Batch size for training.
+       - `output_dir (str)`: Directory to save the trained models.
+       - `save_steps (int)`: Number of steps between saving checkpoints.
+   
+   - To train the model from the command line, run `fine_tune.py` with the required arguments:
+     ```bash
+     python fine_tune.py \
+       --data_path "data/train_data.csv" \
+       --model_name "sentence-transformers/all-MiniLM-L6-v2" \
+       --num_labels 2 \
+       --max_length 512 \
+       --epochs 2 \
+       --batch_size 4 \
+       --output_dir "./saved_models_during_training" \
+       --save_steps 500
+     ```
+
+3. **Perform Inference**:
+   - Use `inference_demo.ipynb` to perform inferences with your trained model. Specify the model and tokenizer paths (either local or from HuggingFace) and run the notebook cells to see the results.
+   - For programmatic inference, you can use the function provided in `inference.py`:
+     ```python
+     from inference import get_inference
+     result = get_inference(question="What is the relevance?", paragraph="This is a sample paragraph.", model_path="path/to/model", tokenizer_path="path/to/tokenizer")
+     ```
+
+
 ## Repository Contents
 
 ### Python Scripts
@@ -90,34 +145,6 @@ This folder contains a set of scripts and notebooks designed to process data, tr
 - **`Data/`**
   - This folder contains the processed training data obtained from the `curator` module. It serves as the input for training the sentence transformer model.
 
-## How to Use This Repository
-
-1. **Prepare Training Data**:
-   - If you have CSV data from the curator module, run `make_training_data_from_curator.py` to process and save it in the `Data` folder.
-   - Alternatively, you can use `make_sample_training_data.ipynb` to generate sample data from a sample CSV file.
-
-2. **Train the Model**:
-   - Use `train_sentence_transformer.ipynb` or `train_sentence_transformer.py` to train a sentence transformer model with the processed data from the `Data` folder and save it locally. Follow the steps in the notebook or script to configure and start the training process.
-   - To train the model from the command line, run `fine_tune.py` with the required arguments:
-     ```bash
-     python fine_tune.py \
-       --data_path "data/train_data.csv" \
-       --model_name "sentence-transformers/all-MiniLM-L6-v2" \
-       --num_labels 2 \
-       --max_length 512 \
-       --epochs 2 \
-       --batch_size 4 \
-       --output_dir "./saved_models_during_training" \
-       --save_steps 500
-     ```
-
-3. **Perform Inference**:
-   - Use `inference_demo.ipynb` to perform inferences with your trained model. Specify the model and tokenizer paths (either local or from HuggingFace) and run the notebook cells to see the results.
-   - For programmatic inference, you can use the function provided in `inference.py`:
-     ```python
-     from inference import get_inference
-     result = get_inference(question="What is the relevance?", paragraph="This is a sample paragraph.", model_path="path/to/model", tokenizer_path="path/to/tokenizer")
-     ```
 
 ## Setting Up the Environment
 
