@@ -1,6 +1,6 @@
 """This module contains utility functions for performing inference using pre-trained sequence classification models."""
 
-# Module: inference_utils
+# Module: inference
 # Author: Tanishq-ids
 
 import torch

@@ -8,8 +8,19 @@ This folder contains a set of scripts and notebooks designed to process data, tr
 ## How to Use This Repository
 
 1. **Prepare Training Data**:
+   - One must have data from the curator module, which is used for training of the model. The data from the curator module is a CSV file as follows:
+
+   ## Example Data
+
+   Here is a snippet of the data from our spreadsheet:
+
+   | question                      | context                                                                                                                   | company | source_file                       | source_page | kpi_id | year | answer       | data_type | relevant_paragraphs                            | annotator          | Index | label |
+   |-------------------------------|----------------------------------------------------------------------------------------------------------------------------|---------|-----------------------------------|-------------|--------|------|--------------|-----------|------------------------------------------------|---------------------|-------|-------|
+   | What is the company name?     | The Company is exposed to a risk of by losses counterparties their contractual financial obligations when due, and in particular depends on the reliability of banks the Company deposits its available cash. | NOVATEK | 04_NOVATEK_AR_2016_ENG_11.pdf | ['0']       | 0      | 2016 | PAO NOVATEK  | TEXT      | ["PAO NOVATEK ANNUAL REPORT 2016"]            | train_anno_large.xlsx | 1022  | 0     |
+
    - If you have CSV data from the curator module, run `make_training_data_from_curator.py` to process and save it in the `Data` folder.
    - Alternatively, you can use `make_sample_training_data.ipynb` to generate sample data from a sample CSV file.
+
 
 2. **Train the Model**:
    - Use `train_sentence_transformer.ipynb` or `train_sentence_transformer.py` to train a sentence transformer model with the processed data from the `Data` folder and save it locally. Follow the steps in the notebook or script to configure and start the training process.

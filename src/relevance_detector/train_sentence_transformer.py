@@ -6,6 +6,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from torch.utils.data import Dataset
 
+
 class CustomDataset(Dataset):
     def __init__(self, tokenizer, questions, paragraphs, labels, max_length):
         self.tokenizer = tokenizer
@@ -34,6 +35,7 @@ class CustomDataset(Dataset):
             "attention_mask": attention_mask,
             "labels": torch.tensor(label, dtype=torch.long),
         }
+
 
 def fine_tune_model(data_path, model_name, num_labels, max_length, epochs, batch_size, output_dir, save_steps):
     # Load your dataset into a pandas DataFrame
