@@ -10,10 +10,8 @@ This folder contains a set of scripts and notebooks designed to process data, tr
 1. **Prepare Training Data**:
    - One must have data from the curator module, which is used for training of the model. The data from the curator module is a CSV file as follows:
 
-   ## Example Data
-
-   Here is a snippet of the data from our spreadsheet:
-
+   ### Example Snippet
+   
    | question                      | context                                                                                                                   | company | source_file                       | source_page | kpi_id | year | answer       | data_type | relevant_paragraphs                            | annotator          | Index | label |
    |-------------------------------|----------------------------------------------------------------------------------------------------------------------------|---------|-----------------------------------|-------------|--------|------|--------------|-----------|------------------------------------------------|---------------------|-------|-------|
    | What is the company name?     | The Company is exposed to a risk of by losses counterparties their contractual financial obligations when due, and in particular depends on the reliability of banks the Company deposits its available cash. | NOVATEK | 04_NOVATEK_AR_2016_ENG_11.pdf | ['0']       | 0      | 2016 | PAO NOVATEK  | TEXT      | ["PAO NOVATEK ANNUAL REPORT 2016"]            | train_anno_large.xlsx | 1022  | 0     |
