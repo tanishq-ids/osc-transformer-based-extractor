@@ -37,13 +37,31 @@ def check_kpi_mapping_path(data_path):
         raise ValueError("KPI mapping path is not a CSV file.")
 
 
-def make_training_data(curator_data_path: str, kpi_mapping_path: str) -> None:
+def check_output_path(output_path):
+    """
+    Check if the output path exists, if not create it.
+
+    Args:
+        output_path (str): Path to the output directory.
+
+    Raises:
+        ValueError: If the path is not a directory.
+    """
+    if not os.path.exists(output_path):
+        raise ValueError("Output path does not exist.")
+
+    if not os.path.isdir(output_path):
+        raise ValueError("Output path is not a directory.")
+
+
+def make_training_data(curator_data_path: str, kpi_mapping_path: str, output_path: str) -> None:
     """
     Generate training data based on curator data and KPI mapping.
 
     Args:
         curator_data_path (str): Path to the curator data CSV file.
         kpi_mapping_path (str): Path to the KPI mapping CSV file.
+        output_path (str): Path to the output directory.
 
     Returns:
         None
@@ -91,33 +109,30 @@ def make_training_data(curator_data_path: str, kpi_mapping_path: str) -> None:
         }
     )
 
-    # Define the directory path
-    directory = r"src\relevance_detector\data"
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+    # Save the DataFrame to the specified output path
     file_name = "train_data.csv"
-    save_dir = os.path.join(directory, file_name)
-    train_data.to_csv(save_dir)
+    save_dir = os.path.join(output_path, file_name)
+    train_data.to_csv(save_dir, index=False)
 
     print(f"Data saved at {save_dir}")
-
-
-# make_training_data(r"src\relevance_detector\OSC\output_curator.csv", r"src\relevance_detector\OSC\kpi_mapping.csv")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Make Training Data for training the model using the output from the Curator module.")
     parser.add_argument("--curator_data_path", type=str, required=True, help="Path to the CSV file from the Curator Module.")
-    parser.add_argument("--kpi_mapping_path", type=str, required=True, help="Path to the kpi_mapping CSV file.") 
+    parser.add_argument("--kpi_mapping_path", type=str, required=True, help="Path to the kpi_mapping CSV file.")
+    parser.add_argument("--output_path", type=str, required=True, help="Path to the output directory.")
 
     args = parser.parse_args()
 
     check_curator_data_path(args.curator_data_path)
     check_kpi_mapping_path(args.kpi_mapping_path)
+    check_output_path(args.output_path)
 
     make_training_data(
         curator_data_path=args.curator_data_path,
-        kpi_mapping_path=args.kpi_mapping_path
+        kpi_mapping_path=args.kpi_mapping_path,
+        output_path=args.output_path
     )
 
     print("Training Data Successfully Made !!")
