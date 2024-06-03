@@ -7,6 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from torch.utils.data import Dataset
 import os
+import numpy
 
 
 def check_csv_columns(file_path):
