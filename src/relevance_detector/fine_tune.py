@@ -6,6 +6,51 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from torch.utils.data import Dataset
+import os
+
+
+def check_csv_columns(file_path):
+    """
+    Check if the CSV file exists and contains the required columns.
+
+    Args:
+        file_path (str): Path to the CSV file.
+
+    Raises:
+        ValueError: If the file does not exist or does not contain the required columns.
+    """
+    if not os.path.exists(file_path):
+        raise ValueError(f"Data path {file_path} does not exist.")
+    
+    required_columns = ["question", "paragraph", "label"]
+    
+    try:
+        df = pd.read_csv(file_path)
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        if missing_columns:
+            raise ValueError(f"CSV file must contain the columns: {required_columns}. Missing columns: {missing_columns}")
+    except pd.errors.EmptyDataError:
+        raise ValueError("CSV file is empty.")
+    except pd.errors.ParserError:
+        raise ValueError("Error parsing CSV file.")
+    except Exception as e:
+        raise ValueError(f"Error while checking CSV columns: {e}")
+
+
+def check_output_dir(output_dir):
+    """
+    Check if the output directory is valid.
+
+    Args:
+        output_dir (str): Path to the output directory.
+
+    Raises:
+        ValueError: If the directory does not exist or is not a directory.
+    """
+    if not os.path.exists(output_dir):
+        raise ValueError(f"Output directory {output_dir} does not exist.")
+    if not os.path.isdir(output_dir):
+        raise ValueError(f"Output path {output_dir} is not a directory.")
 
 
 class CustomDataset(Dataset):
@@ -101,14 +146,14 @@ def fine_tune_model(data_path, model_name, num_labels, max_length, epochs, batch
         print()
 
     # Save the model and tokenizer
-    model.save_pretrained("saved_model")
-    tokenizer.save_pretrained("saved_model")
+    model.save_pretrained(output_dir)
+    tokenizer.save_pretrained(output_dir)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Fine-tune a Hugging Face model on a custom dataset.")
     parser.add_argument("--data_path", type=str, required=True, help="Path to the CSV file containing the dataset.")
-    parser.add_argument("--model_name", type=str, required=True, help="Name of the pre-trained model to use.")
+    parser.add_argument("--model_name", type=str, required=True, help="Name/ path of the pre-trained model to use(local or hugging face).")
     parser.add_argument("--num_labels", type=int, required=True, help="Number of labels for the classification task.")
     parser.add_argument("--max_length", type=int, required=True, help="Maximum length of the input sequences.")
     parser.add_argument("--epochs", type=int, required=True, help="Number of training epochs.")
@@ -117,6 +162,9 @@ if __name__ == "__main__":
     parser.add_argument("--save_steps", type=int, required=True, help="Number of steps before saving the model during training.")
 
     args = parser.parse_args()
+
+    check_csv_columns(args.data_path)
+    check_output_dir(args.output_dir)
 
     fine_tune_model(
         data_path=args.data_path,
@@ -128,6 +176,8 @@ if __name__ == "__main__":
         output_dir=args.output_dir,
         save_steps=args.save_steps
     )
+
+    print(f"Model- {args.model_name} Trained and Saved Successfully at {args.output_dir}")
 
 ''' 
 To run the file in CMD
@@ -143,3 +193,4 @@ python fine_tune.py \
   --save_steps 500
 
 '''
+

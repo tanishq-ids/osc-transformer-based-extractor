@@ -1,8 +1,40 @@
 """Generate training data based on curator data and KPI mapping."""
 
 import os
-
+import argparse
 import pandas as pd
+
+
+def check_curator_data_path(data_path):
+    """
+    Check if curator data path exists and is a CSV file.
+
+    Args:
+        data_path (str): Path to the curator data file.
+
+    Raises:
+        ValueError: If the path does not exist or is not a CSV file.
+    """
+    if not os.path.exists(data_path):
+        raise ValueError("Curator data path does not exist.")
+    if not data_path.lower().endswith('.csv'):
+        raise ValueError("Curator data path is not a CSV file.")
+
+
+def check_kpi_mapping_path(data_path):
+    """
+    Check if KPI mapping path exists and is a CSV file.
+
+    Args:
+        data_path (str): Path to the KPI mapping file.
+
+    Raises:
+        ValueError: If the path does not exist or is not a CSV file.
+    """
+    if not os.path.exists(data_path):
+        raise ValueError("KPI mapping path does not exist.")
+    if not data_path.lower().endswith('.csv'):
+        raise ValueError("KPI mapping path is not a CSV file.")
 
 
 def make_training_data(curator_data_path: str, kpi_mapping_path: str) -> None:
@@ -71,3 +103,21 @@ def make_training_data(curator_data_path: str, kpi_mapping_path: str) -> None:
 
 
 # make_training_data(r"src\relevance_detector\OSC\output_curator.csv", r"src\relevance_detector\OSC\kpi_mapping.csv")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Make Training Data for training the model using the output from the Curator module.")
+    parser.add_argument("--curator_data_path", type=str, required=True, help="Path to the CSV file from the Curator Module.")
+    parser.add_argument("--kpi_mapping_path", type=str, required=True, help="Path to the kpi_mapping CSV file.") 
+
+    args = parser.parse_args()
+
+    check_curator_data_path(args.curator_data_path)
+    check_kpi_mapping_path(args.kpi_mapping_path)
+
+    make_training_data(
+        curator_data_path=args.curator_data_path,
+        kpi_mapping_path=args.kpi_mapping_path
+    )
+
+    print("Training Data Successfully Made !!")
