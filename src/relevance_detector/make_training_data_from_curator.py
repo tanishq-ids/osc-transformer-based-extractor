@@ -3,7 +3,6 @@
 import os
 import argparse
 import pandas as pd
-import numpy
 
 
 def check_curator_data_path(data_path):

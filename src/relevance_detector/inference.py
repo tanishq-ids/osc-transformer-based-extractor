@@ -5,7 +5,6 @@
 
 import argparse
 import os
-import numpy
 import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
