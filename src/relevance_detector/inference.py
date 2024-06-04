@@ -25,6 +25,22 @@ def check_model_and_tokenizer_path(model_path, tokenizer_path):
 
     if not os.path.exists(tokenizer_path):
         raise ValueError(f"Tokenizer path {tokenizer_path} does not exist.")
+    
+
+def check_question_paragraph(question: str, paragraph: str):
+
+    if type(question) is not str:
+        raise ValueError("Question must be a string.")
+    
+    if type(paragraph) is not str:
+        raise ValueError("Paragraph must be a string.")
+
+    if not question:
+        raise ValueError("Question is Emtpy")
+    
+    if not paragraph:
+        raise ValueError("Paragraph is Emtpy")
+
 
 
 def get_inference(question: str, paragraph: str, model_path: str, tokenizer_path: str) -> int:
@@ -66,6 +82,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     check_model_and_tokenizer_path(args.model_path, args.tokenizer_path)
+    check_question_paragraph(args.question, args.paragraph)
 
     result = get_inference(
         question=args.question,
