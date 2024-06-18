@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 import pytest
-from relevance_detector.make_training_data_from_curator import (
+from osc_transformer_based_extractor.make_training_data_from_curator import (
     check_curator_data_path,
     check_kpi_mapping_path,
     check_output_path,
@@ -88,12 +88,13 @@ def test_invalid_kpi_id():
     dummy_curator_data_invalid_kpi = pd.DataFrame({"context": ["Lorem ipsum"], "kpi_id": [999], "label": [1]})
     invalid_curator_data_path = r"src\PYTESTS\testing_data\invalid_curator_data.csv"
     dummy_curator_data_invalid_kpi.to_csv(invalid_curator_data_path, index=False)
-    
+
     with pytest.raises(KeyError):
         make_training_data(invalid_curator_data_path, kpi_mapping_path_valid, output_path_valid)
-    
+
     # Clean up
     os.remove(invalid_curator_data_path)
+
 
 os.remove(os.path.dirname(curator_data_path_valid), exist_ok=True)
 os.remove(output_path_valid, exist_ok=True)
