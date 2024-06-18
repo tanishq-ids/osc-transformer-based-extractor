@@ -22,7 +22,7 @@ def check_csv_columns(file_path):
     if not os.path.exists(file_path):
         raise ValueError(f"Data path {file_path} does not exist.")
     
-    required_columns = ["question", "paragraph", "label"]
+    required_columns = ["question", "context", "label"]
     
     try:
         df = pd.read_csv(file_path)
@@ -54,10 +54,10 @@ def check_output_dir(output_dir):
 
 
 class CustomDataset(Dataset):
-    def __init__(self, tokenizer, questions, paragraphs, labels, max_length):
+    def __init__(self, tokenizer, questions, contexts, labels, max_length):
         self.tokenizer = tokenizer
         self.questions = questions
-        self.paragraphs = paragraphs
+        self.contexts = contexts
         self.labels = labels
         self.max_length = max_length
 
@@ -66,11 +66,11 @@ class CustomDataset(Dataset):
 
     def __getitem__(self, idx):
         question = str(self.questions[idx])
-        paragraph = str(self.paragraphs[idx])
+        context = str(self.contexts[idx])
         label = self.labels[idx]
 
         inputs = self.tokenizer(
-            question, paragraph, truncation=True, padding="max_length", max_length=self.max_length, return_tensors="pt"
+            question, context, truncation=True, padding="max_length", max_length=self.max_length, return_tensors="pt"
         )
 
         input_ids = inputs["input_ids"].squeeze()
@@ -86,6 +86,7 @@ class CustomDataset(Dataset):
 def fine_tune_model(data_path, model_name, num_labels, max_length, epochs, batch_size, output_dir, save_steps):
     # Load your dataset into a pandas DataFrame
     df = pd.read_csv(data_path)
+    df = df[["question", "context", "label"]]
 
     # Load Model and Tokenizer
     model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=num_labels)
@@ -97,8 +98,8 @@ def fine_tune_model(data_path, model_name, num_labels, max_length, epochs, batch
     eval_df = eval_df.reset_index(drop=True)
 
     # Create training and evaluation datasets
-    train_dataset = CustomDataset(tokenizer, train_df["question"], train_df["paragraph"], train_df["label"], max_length)
-    eval_dataset = CustomDataset(tokenizer, eval_df["question"], eval_df["paragraph"], eval_df["label"], max_length)
+    train_dataset = CustomDataset(tokenizer, train_df["question"], train_df["context"], train_df["label"], max_length)
+    eval_dataset = CustomDataset(tokenizer, eval_df["question"], eval_df["context"], eval_df["label"], max_length)
 
     # Define Training Arguments
     training_args = TrainingArguments(
