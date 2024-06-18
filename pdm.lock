@@ -26,6 +26,7 @@ files = [
     {file = "accelerate-0.31.0.tar.gz", hash = "sha256:b5199865b26106ccf9205acacbe8e4b3b428ad585e7c472d6a46f6fb75b6c176"},
 ]
 
+
 [[package]]
 name = "appnope"
 version = "0.1.4"
@@ -2104,7 +2105,8 @@ files = [
 [[package]]
 name = "tbb"
 version = "2021.12.0"
-summary = "Intel® oneAPI Threading Building Blocks"
+summary = "Intel® oneAPI Threading Building Blocks (oneTBB)"
+
 files = [
     {file = "tbb-2021.12.0-py2.py3-none-manylinux1_i686.whl", hash = "sha256:f2cc9a7f8ababaa506cbff796ce97c3bf91062ba521e15054394f773375d81d8"},
     {file = "tbb-2021.12.0-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:a925e9a7c77d3a46ae31c34b0bb7f801c4118e857d137b68f68a8e458fcf2bd7"},
