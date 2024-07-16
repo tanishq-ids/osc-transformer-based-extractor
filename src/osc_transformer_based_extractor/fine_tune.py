@@ -1,12 +1,22 @@
-import argparse
+"""
+Fine-tune a Hugging Face transformer model on a custom dataset using CSV input.
+
+This script performs the following steps:
+1. Validates the input CSV file and output directory.
+2. Loads the dataset and splits it into training and evaluation sets.
+3. Fine-tunes a pre-trained Hugging Face transformer model on the dataset.
+4. Evaluates the model and prints evaluation results and accuracy.
+5. Saves the fine-tuned model and tokenizer.
+"""
+
+
+import os
 import pandas as pd
 import torch
-from transformers import TrainingArguments, Trainer
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
+from transformers import TrainingArguments, Trainer, AutoModelForSequenceClassification, AutoTokenizer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from torch.utils.data import Dataset
-import os
 
 
 def check_csv_columns(file_path):
@@ -54,7 +64,28 @@ def check_output_dir(output_dir):
 
 
 class CustomDataset(Dataset):
+    """
+    Custom dataset class for sequence classification tasks.
+
+    Args:
+        tokenizer (transformers.PreTrainedTokenizer): The tokenizer to use for encoding the data.
+        questions (pd.Series): A pandas series containing the questions.
+        contexts (pd.Series): A pandas series containing the contexts.
+        labels (pd.Series): A pandas series containing the labels.
+        max_length (int): The maximum length of the input sequences.
+    """
+
     def __init__(self, tokenizer, questions, contexts, labels, max_length):
+        """
+        Initialize the CustomDataset.
+
+        Args:
+            tokenizer (transformers.PreTrainedTokenizer): The tokenizer to use for encoding the data.
+            questions (pd.Series): A pandas series containing the questions.
+            contexts (pd.Series): A pandas series containing the contexts.
+            labels (pd.Series): A pandas series containing the labels.
+            max_length (int): The maximum length of the input sequences.
+        """
         self.tokenizer = tokenizer
         self.questions = questions
         self.contexts = contexts
@@ -62,9 +93,19 @@ class CustomDataset(Dataset):
         self.max_length = max_length
 
     def __len__(self):
+        """Return the number of samples in the dataset."""
         return len(self.questions)
 
     def __getitem__(self, idx):
+        """
+        Get the sample at index `idx`.
+
+        Args:
+            idx (int): Index of the sample to retrieve.
+
+        Returns:
+            dict: A dictionary containing input IDs, attention mask, and labels.
+        """
         question = str(self.questions[idx])
         context = str(self.contexts[idx])
         label = self.labels[idx]
@@ -84,6 +125,19 @@ class CustomDataset(Dataset):
 
 
 def fine_tune_model(data_path, model_name, num_labels, max_length, epochs, batch_size, output_dir, save_steps):
+    """
+    Fine-tune a pre-trained model on a custom dataset.
+
+    Args:
+        data_path (str): Path to the CSV file containing the dataset.
+        model_name (str): Name/path of the pre-trained model to use.
+        num_labels (int): Number of labels for the classification task.
+        max_length (int): Maximum length of the input sequences.
+        epochs (int): Number of training epochs.
+        batch_size (int): Batch size for training.
+        output_dir (str): Directory where the model will be saved during training.
+        save_steps (int): Number of steps before saving the model during training.
+    """
     # Load your dataset into a pandas DataFrame
     df = pd.read_csv(data_path)
     df = df[["question", "context", "label"]]
@@ -149,48 +203,3 @@ def fine_tune_model(data_path, model_name, num_labels, max_length, epochs, batch
     # Save the model and tokenizer
     model.save_pretrained(output_dir)
     tokenizer.save_pretrained(output_dir)
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Fine-tune a Hugging Face model on a custom dataset.")
-    parser.add_argument("--data_path", type=str, required=True, help="Path to the CSV file containing the dataset.")
-    parser.add_argument("--model_name", type=str, required=True, help="Name/ path of the pre-trained model to use(local or hugging face).")
-    parser.add_argument("--num_labels", type=int, required=True, help="Number of labels for the classification task.")
-    parser.add_argument("--max_length", type=int, required=True, help="Maximum length of the input sequences.")
-    parser.add_argument("--epochs", type=int, required=True, help="Number of training epochs.")
-    parser.add_argument("--batch_size", type=int, required=True, help="Batch size for training.")
-    parser.add_argument("--output_dir", type=str, required=True, help="Directory where the model will be saved during training.")
-    parser.add_argument("--save_steps", type=int, required=True, help="Number of steps before saving the model during training.")
-
-    args = parser.parse_args()
-
-    check_csv_columns(args.data_path)
-    check_output_dir(args.output_dir)
-
-    fine_tune_model(
-        data_path=args.data_path,
-        model_name=args.model_name,
-        num_labels=args.num_labels,
-        max_length=args.max_length,
-        epochs=args.epochs,
-        batch_size=args.batch_size,
-        output_dir=args.output_dir,
-        save_steps=args.save_steps
-    )
-
-    print(f"Model- {args.model_name} Trained and Saved Successfully at {args.output_dir}")
-
-'''
-To run the file in CMD
-
-python fine_tune.py \
-  --data_path "data/train_data.csv" \
-  --model_name "sentence-transformers/all-MiniLM-L6-v2" \
-  --num_labels 2 \
-  --max_length 512 \
-  --epochs 2 \
-  --batch_size 4 \
-  --output_dir "./saved_models_during_training" \
-  --save_steps 500
-
-'''
