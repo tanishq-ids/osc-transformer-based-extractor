@@ -3,7 +3,6 @@
 # Module: inference
 # Author: Tanishq-ids
 
-
 import os
 import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
@@ -51,7 +50,9 @@ def check_question_context(question, context):
         raise ValueError("Context is empty.")
 
 
-def get_inference(question: str, context: str, model_path: str, tokenizer_path: str) -> int:
+def get_inference(
+    question: str, context: str, model_path: str, tokenizer_path: str
+) -> int:
     """
     Perform inference using a pre-trained sequence classification model.
 
@@ -68,7 +69,14 @@ def get_inference(question: str, context: str, model_path: str, tokenizer_path: 
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 
     # Tokenize inputs
-    inputs = tokenizer(question, context, return_tensors="pt", truncation=True, padding=True, max_length=512)
+    inputs = tokenizer(
+        question,
+        context,
+        return_tensors="pt",
+        truncation=True,
+        padding=True,
+        max_length=512,
+    )
 
     # Forward pass
     with torch.no_grad():
