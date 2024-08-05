@@ -1,12 +1,12 @@
-"""Test module for main Typer commands.
+"""Test module for cli Typer commands.
 
 This module contains test cases for the CLI commands in the
-osc_transformer_based_extractor.main module.
+osc_transformer_based_extractor.cli module.
 """
 
 from typer.testing import CliRunner
 from unittest.mock import patch
-from osc_transformer_based_extractor.main import (
+from osc_transformer_based_extractor.cli import (
     app,
 )  # Import your Typer application instance
 

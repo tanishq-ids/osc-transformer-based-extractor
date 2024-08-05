@@ -215,14 +215,17 @@ def fine_tune_model(
     # Predict labels for the evaluation dataset
     predictions = trainer.predict(eval_dataset)
     predicted_labels = predictions.predictions.argmax(axis=1)
-    true_labels = [item["labels"].item() for item in eval_dataset]
+    true_labels = [
+        eval_dataset[idx]["labels"].item() for idx in range(len(eval_dataset))
+    ]
 
     # Calculate accuracy
     accuracy = accuracy_score(true_labels, predicted_labels)
     print("Accuracy:", accuracy)
 
     # Print inputs along with predicted labels
-    for i, eva_data in enumerate(eval_dataset):
+    for i in range(len(eval_dataset)):
+        eva_data = eval_dataset[i]
         input_ids = eva_data["input_ids"]
         true_label = true_labels[i]
         predicted_label = predicted_labels[i]
