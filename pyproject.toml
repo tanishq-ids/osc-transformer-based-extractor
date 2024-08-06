@@ -58,7 +58,7 @@ build-backend = "pdm.backend"
 license-files = ["LICENSES.txt"]
 
 [project.scripts]
-osc-transformer-based-extractor = "osc_transformer_based_extractor.main:app"
+osc-transformer-based-extractor = "osc_transformer_based_extractor.cli:app"
 
 [project.optional-dependencies]
 dev = [
@@ -83,7 +83,7 @@ complete = { call = "tasks.complete:main", help = "Create autocomplete files for
 
 
 # Define CLI commands
-osc-transformer-based-extractor = "osc_transformer_based_extractor.main:app"
+osc-transformer-based-extractor = "osc_transformer_based_extractor.cli:app"
 
 [tool.pdm.dev-dependencies]
 test = ["pdm[pytest]", "pytest-cov"]
