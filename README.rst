@@ -26,6 +26,8 @@ Afterwards you can use the tooling as a CLI tool by simply typing:
 
 .. code-block:: shell
 
+    $ osc-transformer-based-extractor
+
 We are using typer to have a nice CLI tool here. All details and help will be shown in the CLI
 tool itself and are not described here in more detail.
 
