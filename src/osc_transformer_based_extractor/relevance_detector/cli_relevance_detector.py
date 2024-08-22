@@ -1,46 +1,14 @@
-"""
-osc-transformer-based-extractor: CLI for transformer-based model tasks.
-
-This module provides command-line interface (CLI) commands for performing tasks such
-as fine-tuning a transformer model and performing inference using a pre-trained model.
-The CLI is built using Typer, a library for creating command-line interfaces.
-
-Example usage:
-  osc-transformer-based-extractor relevance-detector fine-tune data.csv bert-base-uncased 5 128 3 32 trained_models/ 500
-  osc-transformer-based-extractor relevance-detector inference "/all_json/" "data/kpi_mapping.csv" "output_dir/"  "model/" "tokenizer/" 0.8
-"""
-
 import typer
-from .relevance_detector.fine_tune import (
+from .fine_tune import (
     check_csv_columns,
     check_output_dir,
     fine_tune_model,
 )
-from .relevance_detector.inference import validate_path_exists, run_full_inference
-
-# Main Typer app
-app = typer.Typer(name="osc-transformer-based-extractor")
-
-
-# Define the callback for the main app to provide help information
-@app.callback(invoke_without_command=True)
-def main(ctx: typer.Context):
-    """
-    OSC Transformer Based Extractor CLI.
-
-    Available commands:
-    - relevance-detector
-    """
-    if ctx.invoked_subcommand is None:
-        typer.echo(main.__doc__)
-        raise typer.Exit()
-
+from .inference import validate_path_exists, run_full_inference
 
 # Subcommand app for relevance_detector
 relevance_detector_app = typer.Typer()
 
-
-# Define the callback for relevance_detector to provide help information
 @relevance_detector_app.callback(invoke_without_command=True)
 def relevance_detector(ctx: typer.Context):
     """
@@ -54,8 +22,6 @@ def relevance_detector(ctx: typer.Context):
         typer.echo(relevance_detector.__doc__)
         raise typer.Exit()
 
-
-# Command for fine-tuning the model
 @relevance_detector_app.command("fine-tune")
 def fine_tune(
     data_path: str = typer.Argument(
@@ -95,8 +61,6 @@ def fine_tune(
 
     typer.echo(f"Model '{model_name}' trained and saved successfully at {output_dir}")
 
-
-# Command for performing inference
 @relevance_detector_app.command("inference")
 def inference(
     json_folder_path: str = typer.Argument(
@@ -137,6 +101,3 @@ def inference(
         typer.echo(f"Error: {str(ve)}")
         raise typer.Exit(code=1)
 
-
-# Add the relevance_detector app as a command group under the main app
-app.add_typer(relevance_detector_app, name="relevance-detector")
