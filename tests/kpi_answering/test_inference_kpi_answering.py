@@ -6,7 +6,10 @@ from pathlib import Path
 import shutil
 
 # Import the functions from the module
-from src.osc_transformer_based_extractor.question_answering.inference_qna import validate_path_exists, get_inference_qna, run_full_inference_qna
+from src.osc_transformer_based_extractor.kpi_answering.inference_kpi_answering import (
+    run_full_inference_kpi_answering,
+)
+
 
 @pytest.fixture
 def temp_dir():
@@ -30,35 +33,41 @@ def create_test_data(file_path):
         ],
         "context": [
             "The capital of France is Paris.",
-            "'To Kill a Mockingbird' was written by Harper Lee."
-        ]
+            "'To Kill a Mockingbird' was written by Harper Lee.",
+        ],
     }
     df = pd.DataFrame(data)
     df.to_csv(file_path, index=False)
 
 
-@patch("src.osc_transformer_based_extractor.question_answering.inference_qna.pipeline")
+@patch(
+    "src.osc_transformer_based_extractor.kpi_answering.inference_kpi_answering.pipeline"
+)
 @patch("pandas.read_csv")
 @patch("pandas.DataFrame.to_excel")
-def test_run_full_inference_qna(mock_to_excel, mock_read_csv, mock_pipeline, temp_dir):
+def test_run_full_inference_kpi_answering(
+    mock_to_excel, mock_read_csv, mock_pipeline, temp_dir
+):
     """
-    Test the run_full_inference_qna function.
+    Test the run_full_inference_kpi_answering function.
     """
     # Create test input data
     data_file_path = Path(temp_dir) / "test_data.csv"
     create_test_data(data_file_path)
 
     # Mock the read_csv function to return the test data without reading a file
-    test_data = pd.DataFrame({
-        "question": [
-            "What is the capital of France?",
-            "Who wrote 'To Kill a Mockingbird'?",
-        ],
-        "context": [
-            "The capital of France is Paris.",
-            "'To Kill a Mockingbird' was written by Harper Lee."
-        ]
-    })
+    test_data = pd.DataFrame(
+        {
+            "question": [
+                "What is the capital of France?",
+                "Who wrote 'To Kill a Mockingbird'?",
+            ],
+            "context": [
+                "The capital of France is Paris.",
+                "'To Kill a Mockingbird' was written by Harper Lee.",
+            ],
+        }
+    )
     mock_read_csv.return_value = test_data
 
     # Mock the Hugging Face pipeline
@@ -66,7 +75,7 @@ def test_run_full_inference_qna(mock_to_excel, mock_read_csv, mock_pipeline, tem
     mock_pipeline.return_value = mock_qa_pipeline
     mock_qa_pipeline.return_value = [
         {"answer": "Paris", "start": 24, "end": 29, "score": 0.98},
-        {"answer": "Harper Lee", "start": 29, "end": 39, "score": 0.99}
+        {"answer": "Harper Lee", "start": 29, "end": 39, "score": 0.99},
     ]
 
     # Set up paths
@@ -74,22 +83,32 @@ def test_run_full_inference_qna(mock_to_excel, mock_read_csv, mock_pipeline, tem
     model_path = "distilbert-base-uncased-distilled-squad"  # Using a well-known model for testing
 
     # Run the inference
-    run_full_inference_qna(data_file_path, output_path, model_path)
+    run_full_inference_kpi_answering(data_file_path, output_path, model_path)
 
     # Check if output file is created
     output_file = output_path / "output.xlsx"
 
     # Validate the content written to the output file
-    expected_output_data = pd.DataFrame({
-        "question": ["What is the capital of France?", "Who wrote 'To Kill a Mockingbird'?"],
-        "context": ["The capital of France is Paris.", "'To Kill a Mockingbird' was written by Harper Lee."],
-        "answer": ["Paris", "Harper Lee"],
-        "start": [24, 29],
-        "end": [29, 39],
-        "score": [0.98, 0.99]
-    })
+    expected_output_data = pd.DataFrame(
+        {
+            "question": [
+                "What is the capital of France?",
+                "Who wrote 'To Kill a Mockingbird'?",
+            ],
+            "context": [
+                "The capital of France is Paris.",
+                "'To Kill a Mockingbird' was written by Harper Lee.",
+            ],
+            "answer": ["Paris", "Harper Lee"],
+            "start": [24, 29],
+            "end": [29, 39],
+            "score": [0.98, 0.99],
+        }
+    )
 
     # Mocked `to_excel` should be called once with the expected data and output file path
     mock_to_excel.assert_called_once()
     pd.testing.assert_frame_equal(mock_to_excel.call_args[0][0], expected_output_data)
-    assert mock_to_excel.call_args[0][1] == output_file, "Output file path is incorrect."
+    assert (
+        mock_to_excel.call_args[0][1] == output_file
+    ), "Output file path is incorrect."

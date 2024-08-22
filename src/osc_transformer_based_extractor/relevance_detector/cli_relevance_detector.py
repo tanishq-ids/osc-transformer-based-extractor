@@ -9,6 +9,7 @@ from .inference import validate_path_exists, run_full_inference
 # Subcommand app for relevance_detector
 relevance_detector_app = typer.Typer()
 
+
 @relevance_detector_app.callback(invoke_without_command=True)
 def relevance_detector(ctx: typer.Context):
     """
@@ -21,6 +22,7 @@ def relevance_detector(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         typer.echo(relevance_detector.__doc__)
         raise typer.Exit()
+
 
 @relevance_detector_app.command("fine-tune")
 def fine_tune(
@@ -61,6 +63,7 @@ def fine_tune(
 
     typer.echo(f"Model '{model_name}' trained and saved successfully at {output_dir}")
 
+
 @relevance_detector_app.command("inference")
 def inference(
     json_folder_path: str = typer.Argument(
@@ -100,4 +103,3 @@ def inference(
     except ValueError as ve:
         typer.echo(f"Error: {str(ve)}")
         raise typer.Exit(code=1)
-

@@ -1,6 +1,12 @@
 import typer
-from .train_kpi_answering import train_kpi_answering, check_csv_columns_qna, check_output_dir
-from .inference_kpi_answering import run_full_inference_kpi_answering, validate_path_exists
+from .train_kpi_answering import (
+    train_kpi_answering,
+    check_output_dir,
+)
+from .inference_kpi_answering import (
+    run_full_inference_kpi_answering,
+    validate_path_exists,
+)
 
 # Subcommand app for kpi_answering
 kpi_answering_app = typer.Typer()

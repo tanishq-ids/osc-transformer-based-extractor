@@ -41,10 +41,12 @@ def get_inference_kpi_answering(question: str, context: str, model_path: str):
     """
     question_answerer = pipeline("question-answering", model=model_path)
     result = question_answerer(question=question, context=context)
-    return result['answer'], result['score'], result['start'], result['end']
+    return result["answer"], result["score"], result["start"], result["end"]
 
 
-def run_full_inference_kpi_answering(data_file_path: str, output_path: str, model_path: str):
+def run_full_inference_kpi_answering(
+    data_file_path: str, output_path: str, model_path: str
+):
     """
     Runs full inference on a dataset of questions and contexts, and saves the results.
 
@@ -65,17 +67,12 @@ def run_full_inference_kpi_answering(data_file_path: str, output_path: str, mode
 
     result = []
     for _, row in tqdm(data.iterrows(), total=data.shape[0], desc="Processing Rows"):
-        question = row['question']
-        context = row['context']
-        answer, score, start, end = get_inference_kpi_answering(question, context, model_path)
-        result.append(
-            {
-                "answer": answer,
-                "start" : start,
-                "end" : end,
-                "score" : score
-            }
+        question = row["question"]
+        context = row["context"]
+        answer, score, start, end = get_inference_kpi_answering(
+            question, context, model_path
         )
+        result.append({"answer": answer, "start": start, "end": end, "score": score})
 
     df = pd.DataFrame(result)
 

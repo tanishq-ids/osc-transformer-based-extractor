@@ -1,16 +1,17 @@
 import pytest
 from typer.testing import CliRunner
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from pathlib import Path
 import shutil
 from tempfile import TemporaryDirectory
 
-# Import the app and functions to test
-from src.osc_transformer_based_extractor.kpi_answering.cli_kpi_answering import kpi_answering_app
-from src.osc_transformer_based_extractor.kpi_answering.train_kpi_answering import train_kpi_answering, check_csv_columns_kpi_answering, check_output_dir
-from src.osc_transformer_based_extractor.kpi_answering.inference_kpi_answering import run_full_inference_kpi_answering, validate_path_exists
+
+from src.osc_transformer_based_extractor.kpi_answering.cli_kpi_answering import (
+    kpi_answering_app,
+)
 
 runner = CliRunner()
+
 
 @pytest.fixture
 def temp_dir():
@@ -22,10 +23,22 @@ def temp_dir():
         # Clean up the temporary directory
         shutil.rmtree(temp_dir, ignore_errors=True)
 
-@patch("src.osc_transformer_based_extractor.kpi_answering.train_kpi_answering.train_kpi_answering")
-@patch("src.osc_transformer_based_extractor.kpi_answering.train_kpi_answering.check_csv_columns_kpi_answering")
-@patch("src.osc_transformer_based_extractor.kpi_answering.train_kpi_answering.check_output_dir")
-def test_fine_tune_kpi_answering(mock_check_output_dir, mock_check_csv_columns_kpi_answering, mock_train_kpi_answering, temp_dir):
+
+@patch(
+    "src.osc_transformer_based_extractor.kpi_answering.train_kpi_answering.train_kpi_answering"
+)
+@patch(
+    "src.osc_transformer_based_extractor.kpi_answering.train_kpi_answering.check_csv_columns_kpi_answering"
+)
+@patch(
+    "src.osc_transformer_based_extractor.kpi_answering.train_kpi_answering.check_output_dir"
+)
+def test_fine_tune_kpi_answering(
+    mock_check_output_dir,
+    mock_check_csv_columns_kpi_answering,
+    mock_train_kpi_answering,
+    temp_dir,
+):
     """
     Test the fine-tune command.
     """
@@ -47,8 +60,8 @@ def test_fine_tune_kpi_answering(mock_check_output_dir, mock_check_csv_columns_k
             str(epochs),
             str(batch_size),
             str(output_dir),
-            str(save_steps)
-        ]
+            str(save_steps),
+        ],
     )
 
     assert result.exit_code == 0
@@ -61,14 +74,23 @@ def test_fine_tune_kpi_answering(mock_check_output_dir, mock_check_csv_columns_k
         epochs=epochs,
         batch_size=batch_size,
         output_dir=str(output_dir),
-        save_steps=save_steps
+        save_steps=save_steps,
     )
-    assert f"Model '{model_name}' trained and saved successfully at {output_dir}" in result.output
+    assert (
+        f"Model '{model_name}' trained and saved successfully at {output_dir}"
+        in result.output
+    )
 
 
-@patch("src.osc_transformer_based_extractor.kpi_answering.inference_kpi_answering.run_full_inference_kpi_answering")
-@patch("src.osc_transformer_based_extractor.kpi_answering.inference_kpi_answering.validate_path_exists")
-def test_inference_kpi_answering(mock_validate_path_exists, mock_run_full_inference_kpi_answering, temp_dir):
+@patch(
+    "src.osc_transformer_based_extractor.kpi_answering.inference_kpi_answering.run_full_inference_kpi_answering"
+)
+@patch(
+    "src.osc_transformer_based_extractor.kpi_answering.inference_kpi_answering.validate_path_exists"
+)
+def test_inference_kpi_answering(
+    mock_validate_path_exists, mock_run_full_inference_kpi_answering, temp_dir
+):
     """
     Test the inference command.
     """
@@ -78,12 +100,7 @@ def test_inference_kpi_answering(mock_validate_path_exists, mock_run_full_infere
 
     result = runner.invoke(
         kpi_answering_app,
-        [
-            "inference",
-            str(data_file_path),
-            str(output_path),
-            model_path
-        ]
+        ["inference", str(data_file_path), str(output_path), model_path],
     )
 
     assert result.exit_code == 0
@@ -94,5 +111,5 @@ def test_inference_kpi_answering(mock_validate_path_exists, mock_run_full_infere
     mock_run_full_inference_kpi_answering.assert_called_once_with(
         data_file_path=str(data_file_path),
         output_path=str(output_path),
-        model_path=model_path
+        model_path=model_path,
     )

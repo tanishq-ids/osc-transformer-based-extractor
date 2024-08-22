@@ -6,14 +6,18 @@ osc_transformer_based_extractor.cli module.
 
 import pytest
 from typer.testing import CliRunner
-from src.osc_transformer_based_extractor.main_cli import app  # Adjust the import based on your package structure
+from src.osc_transformer_based_extractor.main_cli import (
+    app,
+)  # Adjust the import based on your package structure
 
 runner = CliRunner()
 
 
 @pytest.fixture
 def mock_relevance_detector_app(mocker):
-    return mocker.patch("my_package.relevance_detector.cli_relevance_detector.relevance_detector_app")
+    return mocker.patch(
+        "my_package.relevance_detector.cli_relevance_detector.relevance_detector_app"
+    )
 
 
 @pytest.fixture

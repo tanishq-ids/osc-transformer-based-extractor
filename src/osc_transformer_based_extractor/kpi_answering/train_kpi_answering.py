@@ -25,10 +25,11 @@ import pandas as pd
 from functools import partial
 import os
 from datasets import Dataset, DatasetDict
-from transformers import ( 
+from transformers import (
     AutoModelForQuestionAnswering,
     TrainingArguments,
-    Trainer, AutoTokenizer,
+    Trainer,
+    AutoTokenizer,
     DefaultDataCollator,
 )
 import numpy as np
@@ -82,13 +83,13 @@ def check_output_dir(output_dir):
 
 
 def train_kpi_answering(
-        data_path,
-        model_name,
-        max_length,
-        epochs,
-        batch_size,
-        output_dir,
-        save_steps,
+    data_path,
+    model_name,
+    max_length,
+    epochs,
+    batch_size,
+    output_dir,
+    save_steps,
 ):
     """
     Fine-tune a pre-trained model on a custom dataset.
@@ -103,7 +104,7 @@ def train_kpi_answering(
         save_steps (int): Number of steps before saving the model during training.
     """
     df = pd.read_csv(data_path)
-    df = df[['question', 'context', 'answer']]
+    df = df[["question", "context", "answer"]]
 
     # Split the DataFrame into train and test sets
     train_df, test_df = train_test_split(df, test_size=0.2, random_state=42)
@@ -115,18 +116,15 @@ def train_kpi_answering(
     test_dataset = Dataset.from_pandas(test_df)
 
     # Create a DatasetDict
-    data = DatasetDict({
-        'train': train_dataset,
-        'test': test_dataset
-    })
+    data = DatasetDict({"train": train_dataset, "test": test_dataset})
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForQuestionAnswering.from_pretrained(model_name)
 
     def preprocess_function(examples, max_length):
-        questions = examples['question']
-        contexts = examples['context']
-        answers = examples['answer']
+        questions = examples["question"]
+        contexts = examples["context"]
+        answers = examples["answer"]
 
         # Tokenize questions and contexts
         tokenized_inputs = tokenizer(
@@ -134,7 +132,7 @@ def train_kpi_answering(
             contexts,
             max_length=max_length,
             truncation=True,
-            padding='max_length'
+            padding="max_length",
         )
 
         # Initialize lists to hold start and end positions
@@ -151,32 +149,45 @@ def train_kpi_answering(
                 start_positions.append(0)
                 end_positions.append(0)
             else:
-                start_positions.append(tokenizer.encode(contexts[i][:answer_start], add_special_tokens=False).__len__())
-                end_positions.append(tokenizer.encode(contexts[i][:answer_start + len(answer)], add_special_tokens=False).__len__() - 1)
+                start_positions.append(
+                    tokenizer.encode(
+                        contexts[i][:answer_start], add_special_tokens=False
+                    ).__len__()
+                )
+                end_positions.append(
+                    tokenizer.encode(
+                        contexts[i][: answer_start + len(answer)],
+                        add_special_tokens=False,
+                    ).__len__()
+                    - 1
+                )
 
-        tokenized_inputs.update({
-            'start_positions': start_positions,
-            'end_positions': end_positions
-        })
+        tokenized_inputs.update(
+            {"start_positions": start_positions, "end_positions": end_positions}
+        )
 
         return tokenized_inputs
-    
+
     # Apply the preprocessing function to the dataset
     # Create a new function with max_length set using partial
-    preprocess_function_with_max_length = partial(preprocess_function, max_length=max_length)
+    preprocess_function_with_max_length = partial(
+        preprocess_function, max_length=max_length
+    )
 
     # Apply the preprocessing function to the dataset
     processed_datasets = data.map(preprocess_function_with_max_length, batched=True)
     # Remove columns that are not needed
-    processed_datasets = processed_datasets.remove_columns(["question", "context", "answer"])
+    processed_datasets = processed_datasets.remove_columns(
+        ["question", "context", "answer"]
+    )
 
     data_collator = DefaultDataCollator()
 
     training_args = TrainingArguments(
         output_dir=output_dir,
         evaluation_strategy="epoch",  # Evaluate at the end of each epoch
-        logging_dir="./logs",           # Directory for logs
-        logging_steps=10,             # Log every 10 steps
+        logging_dir="./logs",  # Directory for logs
+        logging_steps=10,  # Log every 10 steps
         learning_rate=2e-5,
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size,
@@ -206,18 +217,24 @@ def train_kpi_answering(
     # Predict labels for the evaluation dataset
     predictions = trainer.predict(processed_datasets["test"])
     start_logits = predictions.predictions[0]  # Start logits
-    end_logits = predictions.predictions[1]    # End logits
+    end_logits = predictions.predictions[1]  # End logits
 
     # Convert logits to start and end positions
     predicted_starts = np.argmax(start_logits, axis=1)
     predicted_ends = np.argmax(end_logits, axis=1)
 
     # Extract true start and end positions from the dataset
-    true_starts = np.array([example["start_positions"] for example in processed_datasets["test"]])
-    true_ends = np.array([example["end_positions"] for example in processed_datasets["test"]])
+    true_starts = np.array(
+        [example["start_positions"] for example in processed_datasets["test"]]
+    )
+    true_ends = np.array(
+        [example["end_positions"] for example in processed_datasets["test"]]
+    )
 
     # Calculate accuracy (you might want a different metric depending on your needs)
-    accuracy = np.mean((predicted_starts == true_starts) & (predicted_ends == true_ends))
+    accuracy = np.mean(
+        (predicted_starts == true_starts) & (predicted_ends == true_ends)
+    )
     print("Accuracy:", accuracy)
 
     # Print inputs along with predicted and true answer spans
@@ -230,9 +247,15 @@ def train_kpi_answering(
         predicted_end = predicted_ends[i]
 
         input_text = tokenizer.decode(input_ids, skip_special_tokens=True)
-        predicted_answer = tokenizer.convert_tokens_to_string(tokenizer.convert_ids_to_tokens(input_ids[predicted_start:predicted_end+1]))
-        true_answer = tokenizer.convert_tokens_to_string(tokenizer.convert_ids_to_tokens(input_ids[true_start:true_end+1]))
-        
+        predicted_answer = tokenizer.convert_tokens_to_string(
+            tokenizer.convert_ids_to_tokens(
+                input_ids[predicted_start : predicted_end + 1]
+            )
+        )
+        true_answer = tokenizer.convert_tokens_to_string(
+            tokenizer.convert_ids_to_tokens(input_ids[true_start : true_end + 1])
+        )
+
         print(f"Input: {input_text}")
         print(f"True Answer: {true_answer}")
         print(f"Predicted Answer: {predicted_answer}")
