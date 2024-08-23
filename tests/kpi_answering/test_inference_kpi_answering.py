@@ -1,9 +1,9 @@
-import pandas as pd
-import pytest
 from unittest.mock import patch, MagicMock
 from tempfile import TemporaryDirectory
 from pathlib import Path
 import shutil
+import pandas as pd
+import pytest
 
 # Import the functions from the module
 from src.osc_transformer_based_extractor.kpi_answering.inference_kpi_answering import (

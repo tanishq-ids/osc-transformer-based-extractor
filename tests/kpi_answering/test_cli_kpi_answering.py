@@ -1,10 +1,9 @@
-import pytest
 from typer.testing import CliRunner
 from unittest.mock import patch
 from pathlib import Path
 import shutil
 from tempfile import TemporaryDirectory
-
+import pytest
 
 from src.osc_transformer_based_extractor.kpi_answering.cli_kpi_answering import (
     kpi_answering_app,
