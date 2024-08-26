@@ -1,32 +1,33 @@
 import typer
-from .train_kpi_answering import (
-    train_kpi_answering,
+from .train_kpi_detection import (
+    train_kpi_detection,
     check_output_dir,
+    check_csv_columns_kpi_detection,
 )
-from .inference_kpi_answering import (
-    run_full_inference_kpi_answering,
+from .inference_kpi_detection import (
+    run_full_inference_kpi_detection,
     validate_path_exists,
 )
 
-# Subcommand app for kpi_answering
-kpi_answering_app = typer.Typer()
+# Subcommand app for kpi_detection
+kpi_detection_app = typer.Typer()
 
 
-@kpi_answering_app.callback(invoke_without_command=True)
-def kpi_answering(ctx: typer.Context):
+@kpi_detection_app.callback(invoke_without_command=True)
+def kpi_detection(ctx: typer.Context):
     """
-    Commands for kpi Answering tasks.
+    Commands for kpi detection tasks.
 
     Available commands:
     - fine-tune
     - inference
     """
     if ctx.invoked_subcommand is None:
-        typer.echo(kpi_answering.__doc__)
+        typer.echo(kpi_detection.__doc__)
         raise typer.Exit()
 
 
-@kpi_answering_app.command("fine-tune")
+@kpi_detection_app.command("fine-tune")
 def fine_tune_qna(
     data_path: str = typer.Argument(
         ..., help="Path to the CSV file containing training data."
@@ -46,10 +47,10 @@ def fine_tune_qna(
     ),
 ):
     """Fine-tune a pre-trained Hugging Face model on a custom dataset."""
-    check_csv_columns_qna(data_path)
+    check_csv_columns_kpi_detection(data_path)
     check_output_dir(output_dir)
 
-    train_kpi_answering(
+    train_kpi_detection(
         data_path=data_path,
         model_name=model_name,
         max_length=max_length,
@@ -62,7 +63,7 @@ def fine_tune_qna(
     typer.echo(f"Model '{model_name}' trained and saved successfully at {output_dir}")
 
 
-@kpi_answering_app.command("inference")
+@kpi_detection_app.command("inference")
 def inference_qna(
     data_file_path: str = typer.Argument(
         ..., help="Path to the input CSV file containing the dataset."
@@ -80,7 +81,7 @@ def inference_qna(
         validate_path_exists(output_path, "output_path")
         validate_path_exists(model_path, "model_path")
 
-        run_full_inference_kpi_answering(
+        run_full_inference_kpi_detection(
             data_file_path=data_file_path,
             output_path=output_path,
             model_path=model_path,

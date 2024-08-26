@@ -23,9 +23,9 @@ def validate_path_exists(path: str, which_path: str):
         raise ValueError(f"{which_path}: {path} does not exist.")
 
 
-def get_inference_kpi_answering(question: str, context: str, model_path: str):
+def get_inference_kpi_detection(question: str, context: str, model_path: str):
     """
-    Performs kpi-answering inference using a specified model.
+    Performs kpi-detection inference using a specified model.
 
     Args:
         question (str): The question to be answered.
@@ -44,7 +44,7 @@ def get_inference_kpi_answering(question: str, context: str, model_path: str):
     return result["answer"], result["score"], result["start"], result["end"]
 
 
-def run_full_inference_kpi_answering(
+def run_full_inference_kpi_detection(
     data_file_path: str, output_path: str, model_path: str
 ):
     """
@@ -69,7 +69,7 @@ def run_full_inference_kpi_answering(
     for _, row in tqdm(data.iterrows(), total=data.shape[0], desc="Processing Rows"):
         question = row["question"]
         context = row["context"]
-        answer, score, start, end = get_inference_kpi_answering(
+        answer, score, start, end = get_inference_kpi_detection(
             question, context, model_path
         )
         result.append({"answer": answer, "start": start, "end": end, "score": score})

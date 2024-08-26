@@ -1,12 +1,14 @@
-from typer.testing import CliRunner
+"""Test File for cli_kpi_detection"""
+
 from unittest.mock import patch
 from pathlib import Path
 import shutil
 from tempfile import TemporaryDirectory
+from typer.testing import CliRunner
 import pytest
 
-from src.osc_transformer_based_extractor.kpi_answering.cli_kpi_answering import (
-    kpi_answering_app,
+from src.osc_transformer_based_extractor.kpi_detection.cli_kpi_detection import (
+    kpi_detection_app,
 )
 
 runner = CliRunner()
@@ -24,18 +26,18 @@ def temp_dir():
 
 
 @patch(
-    "src.osc_transformer_based_extractor.kpi_answering.train_kpi_answering.train_kpi_answering"
+    "src.osc_transformer_based_extractor.kpi_detection.train_kpi_detection.train_kpi_detection"
 )
 @patch(
-    "src.osc_transformer_based_extractor.kpi_answering.train_kpi_answering.check_csv_columns_kpi_answering"
+    "src.osc_transformer_based_extractor.kpi_detection.train_kpi_detection.check_csv_columns_kpi_detection"
 )
 @patch(
-    "src.osc_transformer_based_extractor.kpi_answering.train_kpi_answering.check_output_dir"
+    "src.osc_transformer_based_extractor.kpi_detection.train_kpi_detection.check_output_dir"
 )
-def test_fine_tune_kpi_answering(
+def test_fine_tune_kpi_detection(
     mock_check_output_dir,
-    mock_check_csv_columns_kpi_answering,
-    mock_train_kpi_answering,
+    mock_check_csv_columns_kpi_detection,
+    mock_train_kpi_detection,
     temp_dir,
 ):
     """
@@ -50,7 +52,7 @@ def test_fine_tune_kpi_answering(
     save_steps = 500
 
     result = runner.invoke(
-        kpi_answering_app,
+        kpi_detection_app,
         [
             "fine-tune",
             str(data_path),
@@ -64,9 +66,9 @@ def test_fine_tune_kpi_answering(
     )
 
     assert result.exit_code == 0
-    mock_check_csv_columns_kpi_answering.assert_called_once_with(data_path)
+    mock_check_csv_columns_kpi_detection.assert_called_once_with(data_path)
     mock_check_output_dir.assert_called_once_with(output_dir)
-    mock_train_kpi_answering.assert_called_once_with(
+    mock_train_kpi_detection.assert_called_once_with(
         data_path=str(data_path),
         model_name=model_name,
         max_length=max_length,
@@ -82,13 +84,13 @@ def test_fine_tune_kpi_answering(
 
 
 @patch(
-    "src.osc_transformer_based_extractor.kpi_answering.inference_kpi_answering.run_full_inference_kpi_answering"
+    "src.osc_transformer_based_extractor.kpi_detection.inference_kpi_detection.run_full_inference_kpi_detection"
 )
 @patch(
-    "src.osc_transformer_based_extractor.kpi_answering.inference_kpi_answering.validate_path_exists"
+    "src.osc_transformer_based_extractor.kpi_detection.inference_kpi_detection.validate_path_exists"
 )
-def test_inference_kpi_answering(
-    mock_validate_path_exists, mock_run_full_inference_kpi_answering, temp_dir
+def test_inference_kpi_detection(
+    mock_validate_path_exists, mock_run_full_inference_kpi_detection, temp_dir
 ):
     """
     Test the inference command.
@@ -98,7 +100,7 @@ def test_inference_kpi_answering(
     model_path = "distilbert-base-uncased-distilled-squad"
 
     result = runner.invoke(
-        kpi_answering_app,
+        kpi_detection_app,
         ["inference", str(data_file_path), str(output_path), model_path],
     )
 
@@ -107,7 +109,7 @@ def test_inference_kpi_answering(
     mock_validate_path_exists.assert_any_call(data_file_path, "data_file_path")
     mock_validate_path_exists.assert_any_call(output_path, "output_path")
     mock_validate_path_exists.assert_any_call(model_path, "model_path")
-    mock_run_full_inference_kpi_answering.assert_called_once_with(
+    mock_run_full_inference_kpi_detection.assert_called_once_with(
         data_file_path=str(data_file_path),
         output_path=str(output_path),
         model_path=model_path,

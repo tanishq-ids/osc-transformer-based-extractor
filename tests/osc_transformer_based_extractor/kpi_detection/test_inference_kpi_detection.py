@@ -1,3 +1,5 @@
+"""Test File for inference_kpi_detection"""
+
 from unittest.mock import patch, MagicMock
 from tempfile import TemporaryDirectory
 from pathlib import Path
@@ -6,8 +8,8 @@ import pandas as pd
 import pytest
 
 # Import the functions from the module
-from src.osc_transformer_based_extractor.kpi_answering.inference_kpi_answering import (
-    run_full_inference_kpi_answering,
+from src.osc_transformer_based_extractor.kpi_detection.inference_kpi_detection import (
+    run_full_inference_kpi_detection,
 )
 
 
@@ -41,15 +43,15 @@ def create_test_data(file_path):
 
 
 @patch(
-    "src.osc_transformer_based_extractor.kpi_answering.inference_kpi_answering.pipeline"
+    "src.osc_transformer_based_extractor.kpi_detection.inference_kpi_detection.pipeline"
 )
 @patch("pandas.read_csv")
 @patch("pandas.DataFrame.to_excel")
-def test_run_full_inference_kpi_answering(
+def test_run_full_inference_kpi_detection(
     mock_to_excel, mock_read_csv, mock_pipeline, temp_dir
 ):
     """
-    Test the run_full_inference_kpi_answering function.
+    Test the run_full_inference_kpi_detection function.
     """
     # Create test input data
     data_file_path = Path(temp_dir) / "test_data.csv"
@@ -83,7 +85,7 @@ def test_run_full_inference_kpi_answering(
     model_path = "distilbert-base-uncased-distilled-squad"  # Using a well-known model for testing
 
     # Run the inference
-    run_full_inference_kpi_answering(data_file_path, output_path, model_path)
+    run_full_inference_kpi_detection(data_file_path, output_path, model_path)
 
     # Check if output file is created
     output_file = output_path / "output.xlsx"

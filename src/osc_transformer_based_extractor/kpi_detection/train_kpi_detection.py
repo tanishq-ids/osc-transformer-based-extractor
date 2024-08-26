@@ -1,7 +1,7 @@
 """
-KPI Answering Training Module
+KPI Detection Training Module
 
-This module provides functionality to fine-tune a pre-trained kpi-answering model on a custom dataset.
+This module provides functionality to fine-tune a pre-trained kpi-detection model on a custom dataset.
 The training process involves loading the data, preprocessing it, and training the model using the Hugging Face
 Transformers library.
 
@@ -36,7 +36,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 
 
-def check_csv_columns_kpi_answering(file_path):
+def check_csv_columns_kpi_detection(file_path):
     """
     Check if the CSV file exists and contains the required columns.
 
@@ -82,7 +82,7 @@ def check_output_dir(output_dir):
         raise ValueError(f"Output path {output_dir} is not a directory.")
 
 
-def train_kpi_answering(
+def train_kpi_detection(
     data_path,
     model_name,
     max_length,
