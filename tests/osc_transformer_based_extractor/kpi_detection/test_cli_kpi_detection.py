@@ -7,7 +7,7 @@ from tempfile import TemporaryDirectory
 from typer.testing import CliRunner
 import pytest
 
-from src.osc_transformer_based_extractor.kpi_detection.cli_kpi_detection import (
+from osc_transformer_based_extractor.kpi_detection.cli_kpi_detection import (
     kpi_detection_app,
 )
 

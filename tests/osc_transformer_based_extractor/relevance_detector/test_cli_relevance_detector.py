@@ -1,7 +1,7 @@
 from typer.testing import CliRunner
 from unittest.mock import patch
 
-from src.osc_transformer_based_extractor.relevance_detector.cli_relevance_detector import (
+from osc_transformer_based_extractor.relevance_detector.cli_relevance_detector import (
     relevance_detector_app,
 )
 

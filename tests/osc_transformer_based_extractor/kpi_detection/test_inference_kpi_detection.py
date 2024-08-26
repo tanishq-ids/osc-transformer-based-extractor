@@ -8,7 +8,7 @@ import pandas as pd
 import pytest
 
 # Import the functions from the module
-from src.osc_transformer_based_extractor.kpi_detection.inference_kpi_detection import (
+from osc_transformer_based_extractor.kpi_detection.inference_kpi_detection import (
     run_full_inference_kpi_detection,
 )
 
