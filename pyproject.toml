@@ -40,6 +40,7 @@ dependencies = [
     "rich>=13.7.1",
     "numpy<2.0.0",
     "openpyxl>=3.1.5",
+    "datasets>=2.20.0",
 ]
 
 [project.urls]
@@ -58,7 +59,7 @@ build-backend = "pdm.backend"
 license-files = ["LICENSES.txt"]
 
 [project.scripts]
-osc-transformer-based-extractor = "osc_transformer_based_extractor.cli:app"
+osc-transformer-based-extractor = "osc_transformer_based_extractor.main_cli:app"
 
 [project.optional-dependencies]
 dev = [
@@ -83,7 +84,7 @@ complete = { call = "tasks.complete:main", help = "Create autocomplete files for
 
 
 # Define CLI commands
-osc-transformer-based-extractor = "osc_transformer_based_extractor.cli:app"
+osc-transformer-based-extractor = "osc_transformer_based_extractor.main_cli:app"
 
 [tool.pdm.dev-dependencies]
 test = ["pdm[pytest]", "pytest-cov"]
