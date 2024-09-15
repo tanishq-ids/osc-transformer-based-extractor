@@ -9,7 +9,31 @@ import pandas as pd
 import json
 from pathlib import Path
 from tqdm import tqdm
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
+from transformers import AutoModelForSequenceClassification, AutoTokenizer, AutoConfig
+
+
+def resolve_model_path(model_path: str):
+    """
+    Resolves whether the given `model_path` is a Hugging Face model name or a local system path.
+
+    - If the `model_path` refers to a Hugging Face model (e.g., "bert-base-uncased"), the function will return the
+      model name as a string.
+    - If the `model_path` refers to a valid local system path, the function will convert it into a `Path` object.
+    - If neither, the function raises a `ValueError`.
+    """
+
+    # Check if it's a local path
+    if os.path.exists(model_path):
+        return Path(model_path)
+
+    # Check if it's a Hugging Face model name
+    try:
+        AutoConfig.from_pretrained(model_path)
+        return model_path  # It's a Hugging Face model name, return as string
+    except Exception:
+        raise ValueError(
+            f"{model_path} is neither a valid Hugging Face model nor a local file path."
+        )
 
 
 def validate_path_exists(path: str, which_path: str):
@@ -92,8 +116,8 @@ def run_full_inference(
         json_folder_path (str): Path to the folder containing JSON files to process.
         kpi_mapping_path (str): Path to the CSV file containing KPI mappings.
         output_path (str): Path to the folder where the output Excel files will be saved.
-        model_path (str): Path to the model used for inference.
-        tokenizer_path (str): Path to the tokenizer used for inference.
+        model_path (str): Path to the model used for inference (local or Huggingface).
+        tokenizer_path (str): Path to the tokenizer used for inference (local or Huggingface).
         threshold (float): Threshold value for the inference process.
 
     Returns:
@@ -105,8 +129,8 @@ def run_full_inference(
     kpi_mapping_path = str(Path(kpi_mapping_path))
     json_folder_path = str(Path(json_folder_path))
     output_path = str(Path(output_path))
-    model_path = str(Path(model_path))
-    tokenizer_path = str(Path(tokenizer_path))
+    model_path = resolve_model_path(model_path)
+    tokenizer_path = resolve_model_path(tokenizer_path)
 
     # Read the KPI mapping outside the loop
     kpi_mapping = pd.read_csv(kpi_mapping_path)

@@ -39,6 +39,7 @@ def fine_tune(
     max_length: int = typer.Argument(..., help="Maximum length of the sequences."),
     epochs: int = typer.Argument(..., help="Number of training epochs."),
     batch_size: int = typer.Argument(..., help="Batch size for training."),
+    learning_rate: float = typer.Argument(..., help="Learning rate for training."),
     output_dir: str = typer.Argument(
         ..., help="Directory to save the fine-tuned model."
     ),
@@ -57,6 +58,7 @@ def fine_tune(
         max_length=max_length,
         epochs=epochs,
         batch_size=batch_size,
+        learning_rate=learning_rate,
         output_dir=output_dir,
         save_steps=save_steps,
     )

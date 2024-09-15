@@ -142,6 +142,7 @@ def fine_tune_model(
     max_length,
     epochs,
     batch_size,
+    learning_rate,
     output_dir,
     save_steps,
 ):
@@ -155,6 +156,7 @@ def fine_tune_model(
         max_length (int): Maximum length of the input sequences.
         epochs (int): Number of training epochs.
         batch_size (int): Batch size for training.
+        learning_rate (float): Learning rate for trainig
         output_dir (str): Directory where the model will be saved during training.
         save_steps (int): Number of steps before saving the model during training.
     """
@@ -185,14 +187,26 @@ def fine_tune_model(
         tokenizer, eval_df["question"], eval_df["context"], eval_df["label"], max_length
     )
 
-    # Define Training Arguments
+    saved_model_path = os.path.join(output_dir, "saved_model")
+    os.makedirs(saved_model_path, exist_ok=True)
+
     training_args = TrainingArguments(
-        output_dir=output_dir,
-        overwrite_output_dir=True,
-        num_train_epochs=epochs,
+        output_dir=saved_model_path,
+        evaluation_strategy="epoch",  # Evaluate at the end of each epoch
+        logging_dir="./logs",  # Directory for logs
+        logging_steps=10,  # Log every 10 steps
+        learning_rate=learning_rate,
         per_device_train_batch_size=batch_size,
+        per_device_eval_batch_size=batch_size,
+        num_train_epochs=epochs,
         save_steps=save_steps,
-        logging_dir="./logs",
+        weight_decay=0.01,
+        push_to_hub=False,
+        save_strategy="epoch",
+        load_best_model_at_end=True,
+        metric_for_best_model="eval_loss",
+        greater_is_better=True,
+        save_total_limit=1,
     )
 
     # Initialize Trainer
@@ -232,7 +246,3 @@ def fine_tune_model(
         print(f"Input: {tokenizer.decode(input_ids, skip_special_tokens=True)}")
         print(f"True Label: {true_label}, Predicted Label: {predicted_label}")
         print()
-
-    # Save the model and tokenizer
-    model.save_pretrained(output_dir)
-    tokenizer.save_pretrained(output_dir)
