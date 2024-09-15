@@ -49,7 +49,7 @@ def check_csv_columns_kpi_detection(file_path):
     if not os.path.exists(file_path):
         raise ValueError(f"Data path {file_path} does not exist.")
 
-    required_columns = ["question", "context", "answer"]
+    required_columns = ["question", "context", "annotation_answer"]
 
     try:
         df = pd.read_csv(file_path)
@@ -88,6 +88,7 @@ def train_kpi_detection(
     max_length,
     epochs,
     batch_size,
+    learning_rate,
     output_dir,
     save_steps,
 ):
@@ -100,11 +101,13 @@ def train_kpi_detection(
         max_length (int): Maximum length of the input sequences.
         epochs (int): Number of training epochs.
         batch_size (int): Batch size for training.
+        learning_rate (float): Learning rate for trainig
         output_dir (str): Directory where the model will be saved during training.
         save_steps (int): Number of steps before saving the model during training.
     """
     df = pd.read_csv(data_path)
-    df = df[["question", "context", "answer"]]
+    df["annotation_answer"] = df["annotation_answer"].astype(str)
+    df = df[["question", "context", "annotation_answer"]]
 
     # Split the DataFrame into train and test sets
     train_df, test_df = train_test_split(df, test_size=0.2, random_state=42)
@@ -124,7 +127,7 @@ def train_kpi_detection(
     def preprocess_function(examples, max_length):
         questions = examples["question"]
         contexts = examples["context"]
-        answers = examples["answer"]
+        answers = examples["annotation_answer"]
 
         # Tokenize questions and contexts
         tokenized_inputs = tokenizer(
@@ -177,24 +180,32 @@ def train_kpi_detection(
     # Apply the preprocessing function to the dataset
     processed_datasets = data.map(preprocess_function_with_max_length, batched=True)
     # Remove columns that are not needed
-    processed_datasets = processed_datasets.remove_columns(
+    """processed_datasets = processed_datasets.remove_columns(
         ["question", "context", "answer"]
-    )
+    )"""
 
     data_collator = DefaultDataCollator()
 
+    saved_model_path = os.path.join(output_dir, "saved_model")
+    os.makedirs(saved_model_path, exist_ok=True)
+
     training_args = TrainingArguments(
-        output_dir=output_dir,
+        output_dir=saved_model_path,
         evaluation_strategy="epoch",  # Evaluate at the end of each epoch
         logging_dir="./logs",  # Directory for logs
         logging_steps=10,  # Log every 10 steps
-        learning_rate=2e-5,
+        learning_rate=learning_rate,
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size,
         num_train_epochs=epochs,
         save_steps=save_steps,
         weight_decay=0.01,
         push_to_hub=False,
+        save_strategy="epoch",
+        load_best_model_at_end=True,
+        metric_for_best_model="eval_loss",
+        greater_is_better=True,
+        save_total_limit=1,
     )
 
     trainer = Trainer(
@@ -259,8 +270,3 @@ def train_kpi_detection(
         print(f"Input: {input_text}")
         print(f"True Answer: {true_answer}")
         print(f"Predicted Answer: {predicted_answer}")
-        print()
-
-    # Save the model and tokenizer
-    model.save_pretrained(output_dir)
-    tokenizer.save_pretrained(output_dir)

@@ -6,7 +6,31 @@ import os
 import pandas as pd
 from pathlib import Path
 from tqdm import tqdm
-from transformers import pipeline
+from transformers import pipeline, AutoConfig
+
+
+def resolve_model_path(model_path: str):
+    """
+    Resolves whether the given `model_path` is a Hugging Face model name or a local system path.
+
+    - If the `model_path` refers to a Hugging Face model (e.g., "bert-base-uncased"), the function will return the
+      model name as a string.
+    - If the `model_path` refers to a valid local system path, the function will convert it into a `Path` object.
+    - If neither, the function raises a `ValueError`.
+    """
+
+    # Check if it's a local path
+    if os.path.exists(model_path):
+        return Path(model_path)
+
+    # Check if it's a Hugging Face model name
+    try:
+        AutoConfig.from_pretrained(model_path)
+        return model_path  # It's a Hugging Face model name, return as string
+    except Exception:
+        raise ValueError(
+            f"{model_path} is neither a valid Hugging Face model nor a local file path."
+        )
 
 
 def validate_path_exists(path: str, which_path: str):
@@ -61,7 +85,7 @@ def run_full_inference_kpi_detection(
     """
     data_file_path = str(Path(data_file_path))
     output_path = str(Path(output_path))
-    model_path = str(Path(model_path))
+    model_path = resolve_model_path(model_path)
 
     data = pd.read_csv(data_file_path)
 
@@ -72,7 +96,9 @@ def run_full_inference_kpi_detection(
         answer, score, start, end = get_inference_kpi_detection(
             question, context, model_path
         )
-        result.append({"answer": answer, "start": start, "end": end, "score": score})
+        result.append(
+            {"predicted_answer": answer, "start": start, "end": end, "score": score}
+        )
 
     df = pd.DataFrame(result)
 
