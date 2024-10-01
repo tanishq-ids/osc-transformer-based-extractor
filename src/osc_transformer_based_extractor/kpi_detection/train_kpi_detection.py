@@ -121,7 +121,7 @@ def train_kpi_detection(
                     rows.append(new_row)
             else:
                 rows.append(row)
-        
+                
         # Convert the list of rows back to a DataFrame
         return pd.DataFrame(rows)
 
