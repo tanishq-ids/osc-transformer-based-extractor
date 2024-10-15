@@ -121,12 +121,12 @@ def train_kpi_detection(
                     rows.append(new_row)
             else:
                 rows.append(row)
-                
+
         # Convert the list of rows back to a DataFrame
         return pd.DataFrame(rows)
 
     # Apply the function to the DataFrame
-    new_df = expand_rows(df, 'answer_start')
+    new_df = expand_rows(df, "answer_start")
 
     # Split the DataFrame into train and test sets
     train_df, test_df = train_test_split(new_df, test_size=0.2, random_state=42)
@@ -206,7 +206,7 @@ def train_kpi_detection(
         ["question", "context", "annotation_answer", "answer_start"]
     )
 
-    data_collator = DefaultDataCollator()    
+    data_collator = DefaultDataCollator()
     saved_model_path = os.path.join(output_dir, "saved_model")
     os.makedirs(saved_model_path, exist_ok=True)
 
