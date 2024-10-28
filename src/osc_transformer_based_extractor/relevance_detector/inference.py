@@ -70,7 +70,11 @@ def get_inference(
     model_path = str(Path(model_path))
     tokenizer_path = str(Path(tokenizer_path))
 
-    model = AutoModelForSequenceClassification.from_pretrained(model_path)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")  # Print device to confirm
+
+    # Load model and tokenizer
+    model = AutoModelForSequenceClassification.from_pretrained(model_path).to(device)
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 
     # Tokenize inputs
