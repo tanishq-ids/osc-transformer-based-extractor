@@ -122,12 +122,12 @@ def train_kpi_detection(
                     rows.append(new_row)
             else:
                 rows.append(row)
-                
+
         # Convert the list of rows back to a DataFrame
         return pd.DataFrame(rows)
 
     # Apply the function to the DataFrame
-    new_df = expand_rows(df, 'answer_start')
+    new_df = expand_rows(df, "answer_start")
 
     # Split the DataFrame into train and test sets
     train_df, test_df = train_test_split(new_df, test_size=0.2, random_state=42)
@@ -207,7 +207,7 @@ def train_kpi_detection(
         ["question", "context", "annotation_answer", "answer_start"]
     )
 
-    data_collator = DefaultDataCollator()    
+    data_collator = DefaultDataCollator()
 
     # Get the current timestamp
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -247,7 +247,7 @@ def train_kpi_detection(
 
     trainer.train()
 
-        # Save the final trained model and config
+    # Save the final trained model and config
     trainer.save_model(saved_model_path)
 
     # Save the tokenizer manually
