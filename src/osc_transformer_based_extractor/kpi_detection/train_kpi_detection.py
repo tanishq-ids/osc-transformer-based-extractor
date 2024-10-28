@@ -128,6 +128,7 @@ def train_kpi_detection(
 
     # Apply the function to the DataFrame
     new_df = expand_rows(df, "answer_start")
+    new_df = expand_rows(df, "answer_start")
 
     # Split the DataFrame into train and test sets
     train_df, test_df = train_test_split(new_df, test_size=0.2, random_state=42)
