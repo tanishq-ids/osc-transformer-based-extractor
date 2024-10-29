@@ -70,7 +70,17 @@ def get_inference(
     model_path = str(Path(model_path))
     tokenizer_path = str(Path(tokenizer_path))
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # Dynamically detect the device: CUDA, MPS, or CPU
+    if torch.cuda.is_available():
+        device = torch.device("cuda")  # Use NVIDIA GPU
+        print("Using CUDA GPU")
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")  # Use Apple Silicon GPU (MPS)
+        print("Using MPS (Apple Silicon GPU)")
+    else:
+        device = torch.device("cpu")  # Fallback to CPU
+        print("Using CPU")
+
     print(f"Using device: {device}")  # Print device to confirm
 
     # Load model and tokenizer
@@ -86,6 +96,9 @@ def get_inference(
         padding=True,
         max_length=512,
     )
+
+    # Move tokenized inputs to the same device as the model
+    inputs = {key: val.to(device) for key, val in inputs.items()}
 
     # Forward pass
     with torch.no_grad():
