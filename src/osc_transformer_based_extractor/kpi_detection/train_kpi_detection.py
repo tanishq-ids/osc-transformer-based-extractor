@@ -32,6 +32,7 @@ from transformers import (
     AutoTokenizer,
     DefaultDataCollator,
 )
+import torch
 import numpy as np
 from datetime import datetime
 from sklearn.model_selection import train_test_split
@@ -128,7 +129,6 @@ def train_kpi_detection(
 
     # Apply the function to the DataFrame
     new_df = expand_rows(df, "answer_start")
-    new_df = expand_rows(df, "answer_start")
 
     # Split the DataFrame into train and test sets
     train_df, test_df = train_test_split(new_df, test_size=0.2, random_state=42)
@@ -142,9 +142,20 @@ def train_kpi_detection(
     # Create a DatasetDict
     data = DatasetDict({"train": train_dataset, "test": test_dataset})
 
+    # Dynamically detect the device: CUDA, MPS, or CPU
+    if torch.cuda.is_available():
+        device = torch.device("cuda")  # Use NVIDIA GPU
+        print("Using CUDA GPU")
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")  # Use Apple Silicon GPU (MPS)
+        print("Using MPS (Apple Silicon GPU)")
+    else:
+        device = torch.device("cpu")  # Fallback to CPU
+        print("Using CPU")
+
     # Load tokenizer and model
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForQuestionAnswering.from_pretrained(model_name)
+    model = AutoModelForQuestionAnswering.from_pretrained(model_name).to(device)
 
     def preprocess_function(examples, max_length):
         questions = examples["question"]
@@ -160,6 +171,10 @@ def train_kpi_detection(
             truncation=True,
             padding="max_length",
         )
+
+        tokenized_inputs = {
+            key: val.to(device) for key, val in tokenized_inputs.items()
+        }
 
         # Initialize lists to hold start and end positions
         start_positions = []
@@ -189,7 +204,10 @@ def train_kpi_detection(
                 )
 
         tokenized_inputs.update(
-            {"start_positions": start_positions, "end_positions": end_positions}
+            {
+                "start_positions": torch.tensor(start_positions).to(device),
+                "end_positions": torch.tensor(end_positions).to(device),
+            }
         )
 
         return tokenized_inputs
@@ -286,7 +304,7 @@ def train_kpi_detection(
     # Print inputs along with predicted and true answer spans
     for i in range(len(processed_datasets["test"])):
         eva_data = processed_datasets["test"][i]
-        input_ids = eva_data["input_ids"]
+        input_ids = torch.tensor(eva_data["input_ids"]).to(device)
         true_start = true_starts[i]
         true_end = true_ends[i]
         predicted_start = predicted_starts[i]

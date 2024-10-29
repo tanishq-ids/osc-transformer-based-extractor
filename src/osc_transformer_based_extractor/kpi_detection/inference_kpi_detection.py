@@ -6,6 +6,7 @@ import os
 import pandas as pd
 from pathlib import Path
 from tqdm import tqdm
+import torch
 from transformers import pipeline, AutoConfig
 
 
@@ -47,7 +48,7 @@ def validate_path_exists(path: str, which_path: str):
         raise ValueError(f"{which_path}: {path} does not exist.")
 
 
-def get_inference_kpi_detection(question: str, context: str, model_path: str):
+def get_inference_kpi_detection(question: str, context: str, model_path: str, device):
     """
     Performs kpi-detection inference using a specified model.
 
@@ -63,7 +64,7 @@ def get_inference_kpi_detection(question: str, context: str, model_path: str):
             - start (int): The start position of the answer in the context.
             - end (int): The end position of the answer in the context.
     """
-    question_answerer = pipeline("question-answering", model=model_path)
+    question_answerer = pipeline("question-answering", model=model_path, device=device)
     result = question_answerer(question=question, context=context)
     return result["answer"], result["score"], result["start"], result["end"]
 
@@ -89,12 +90,23 @@ def run_full_inference_kpi_detection(
 
     data = pd.read_csv(data_file_path)
 
+    # Dynamically detect the device: CUDA, MPS, or CPU
+    if torch.cuda.is_available():
+        device = torch.device("cuda")  # Use NVIDIA GPU
+        print("Using CUDA GPU")
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")  # Use Apple Silicon GPU (MPS)
+        print("Using MPS (Apple Silicon GPU)")
+    else:
+        device = torch.device("cpu")  # Fallback to CPU
+        print("Using CPU")
+
     result = []
     for _, row in tqdm(data.iterrows(), total=data.shape[0], desc="Processing Rows"):
         question = row["question"]
         context = row["context"]
         answer, score, start, end = get_inference_kpi_detection(
-            question, context, model_path
+            question, context, model_path, device
         )
         result.append(
             {"predicted_answer": answer, "start": start, "end": end, "score": score}

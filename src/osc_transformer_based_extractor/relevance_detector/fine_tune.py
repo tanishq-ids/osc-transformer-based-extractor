@@ -79,9 +79,10 @@ class CustomDataset(Dataset):
         contexts (pd.Series): A pandas series containing the contexts.
         labels (pd.Series): A pandas series containing the labels.
         max_length (int): The maximum length of the input sequences.
+        device (torch.device): The device to move tensors to (GPU/CPU).
     """
 
-    def __init__(self, tokenizer, questions, contexts, labels, max_length):
+    def __init__(self, tokenizer, questions, contexts, labels, max_length, device):
         """
         Initialize the CustomDataset.
 
@@ -91,12 +92,14 @@ class CustomDataset(Dataset):
             contexts (pd.Series): A pandas series containing the contexts.
             labels (pd.Series): A pandas series containing the labels.
             max_length (int): The maximum length of the input sequences.
+            device (torch.device): The device to move tensors to (GPU/CPU).
         """
         self.tokenizer = tokenizer
         self.questions = questions
         self.contexts = contexts
         self.labels = labels
         self.max_length = max_length
+        self.device = device
 
     def __len__(self):
         """Return the number of samples in the dataset."""
@@ -116,6 +119,7 @@ class CustomDataset(Dataset):
         context = str(self.contexts[idx])
         label = self.labels[idx]
 
+        # Tokenize inputs
         inputs = self.tokenizer(
             question,
             context,
@@ -125,13 +129,15 @@ class CustomDataset(Dataset):
             return_tensors="pt",
         )
 
-        input_ids = inputs["input_ids"].squeeze()
-        attention_mask = inputs["attention_mask"].squeeze()
+        # Squeeze and move tensors to the correct device
+        input_ids = inputs["input_ids"].squeeze().to(self.device)
+        attention_mask = inputs["attention_mask"].squeeze().to(self.device)
+        label = torch.tensor(label, dtype=torch.long).to(self.device)
 
         return {
             "input_ids": input_ids,
             "attention_mask": attention_mask,
-            "labels": torch.tensor(label, dtype=torch.long),
+            "labels": label,
         }
 
 
@@ -164,10 +170,21 @@ def fine_tune_model(
     df = pd.read_csv(data_path)
     df = df[["question", "context", "label"]]
 
+    # Dynamically detect the device: CUDA, MPS, or CPU
+    if torch.cuda.is_available():
+        device = torch.device("cuda")  # Use NVIDIA GPU
+        print("Using CUDA GPU")
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")  # Use Apple Silicon GPU (MPS)
+        print("Using MPS (Apple Silicon GPU)")
+    else:
+        device = torch.device("cpu")  # Fallback to CPU
+        print("Using CPU")
+
     # Load Model and Tokenizer
     model = AutoModelForSequenceClassification.from_pretrained(
         model_name, num_labels=num_labels
-    )
+    ).to(device)
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
     # Split the data into training and evaluation sets
@@ -182,9 +199,15 @@ def fine_tune_model(
         train_df["context"],
         train_df["label"],
         max_length,
+        device,
     )
     eval_dataset = CustomDataset(
-        tokenizer, eval_df["question"], eval_df["context"], eval_df["label"], max_length
+        tokenizer,
+        eval_df["question"],
+        eval_df["context"],
+        eval_df["label"],
+        max_length,
+        device,
     )
 
     saved_model_path = os.path.join(output_dir, "saved_model")
@@ -245,4 +268,4 @@ def fine_tune_model(
         predicted_label = predicted_labels[i]
         print(f"Input: {tokenizer.decode(input_ids, skip_special_tokens=True)}")
         print(f"True Label: {true_label}, Predicted Label: {predicted_label}")
-        print()
+        print("\n")
