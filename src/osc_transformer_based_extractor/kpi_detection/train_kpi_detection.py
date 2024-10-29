@@ -33,6 +33,7 @@ from transformers import (
     DefaultDataCollator,
 )
 import numpy as np
+from datetime import datetime
 from sklearn.model_selection import train_test_split
 
 
@@ -127,6 +128,7 @@ def train_kpi_detection(
 
     # Apply the function to the DataFrame
     new_df = expand_rows(df, "answer_start")
+    new_df = expand_rows(df, "answer_start")
 
     # Split the DataFrame into train and test sets
     train_df, test_df = train_test_split(new_df, test_size=0.2, random_state=42)
@@ -207,11 +209,17 @@ def train_kpi_detection(
     )
 
     data_collator = DefaultDataCollator()
-    saved_model_path = os.path.join(output_dir, "saved_model")
+
+    # Get the current timestamp
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    saved_model_path = os.path.join(output_dir, f"{model_name}_{timestamp}")
+    os.makedirs(saved_model_path, exist_ok=True)
+
+    checkpoint_dir = os.path.join(saved_model_path, "checkpoints")
     os.makedirs(saved_model_path, exist_ok=True)
 
     training_args = TrainingArguments(
-        output_dir=saved_model_path,
+        output_dir=checkpoint_dir,
         evaluation_strategy="epoch",  # Evaluate at the end of each epoch
         logging_dir="./logs",  # Directory for logs
         logging_steps=10,  # Log every 10 steps
@@ -225,7 +233,7 @@ def train_kpi_detection(
         save_strategy="epoch",
         load_best_model_at_end=True,
         metric_for_best_model="eval_loss",
-        greater_is_better=True,
+        greater_is_better=False,
         save_total_limit=1,
     )
 
@@ -239,6 +247,12 @@ def train_kpi_detection(
     )
 
     trainer.train()
+
+    # Save the final trained model and config
+    trainer.save_model(saved_model_path)
+
+    # Save the tokenizer manually
+    tokenizer.save_pretrained(saved_model_path)
 
     # Evaluate
     eval_result = trainer.evaluate(processed_datasets["test"])
