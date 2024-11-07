@@ -34,7 +34,6 @@ from transformers import (
 )
 import torch
 import numpy as np
-from datetime import datetime
 from sklearn.model_selection import train_test_split
 
 
@@ -92,6 +91,7 @@ def train_kpi_detection(
     batch_size,
     learning_rate,
     output_dir,
+    export_model_name,
     save_steps,
 ):
     """
@@ -105,6 +105,7 @@ def train_kpi_detection(
         batch_size (int): Batch size for training.
         learning_rate (float): Learning rate for trainig
         output_dir (str): Directory where the model will be saved during training.
+        export_model_name (str): The name to export the trained model
         save_steps (int): Number of steps before saving the model during training.
     """
     # Load the data
@@ -229,8 +230,7 @@ def train_kpi_detection(
     data_collator = DefaultDataCollator()
 
     # Get the current timestamp
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    saved_model_path = os.path.join(output_dir, f"{model_name}_{timestamp}")
+    saved_model_path = os.path.join(output_dir, export_model_name)
     os.makedirs(saved_model_path, exist_ok=True)
 
     checkpoint_dir = os.path.join(saved_model_path, "checkpoints")
