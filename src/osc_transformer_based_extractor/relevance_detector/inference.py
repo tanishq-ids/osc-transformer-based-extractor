@@ -7,6 +7,43 @@ from tqdm import tqdm
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, AutoConfig
 
 
+def combine_and_filter_xlsx_files(folder_path, output_file):
+    """
+    Combine all .xlsx files in a folder, filter rows where paragraph_relevance_flag is 1,
+    and save the result as a new .xlsx file.
+
+    Parameters:
+    folder_path (str): Path to the folder containing .xlsx files.
+    output_file (str): Path to save the filtered combined file.
+    """
+    all_dataframes = []
+
+    # Iterate through all files in the folder
+    for file_name in os.listdir(folder_path):
+        if file_name.endswith(".xlsx"):
+            file_path = os.path.join(folder_path, file_name)
+            try:
+                # Read the Excel file into a DataFrame
+                df = pd.read_excel(file_path)
+                all_dataframes.append(df)
+            except Exception as e:
+                print(f"Error reading {file_name}: {e}")
+
+    # Combine all DataFrames into one
+    if all_dataframes:
+        combined_df = pd.concat(all_dataframes, axis=0, ignore_index=True)
+
+        # Filter rows where paragraph_relevance_flag is 1
+        filtered_df = combined_df[combined_df["paragraph_relevance_flag"] == 1]
+
+        # Save the filtered DataFrame to an Excel file
+        file_name = "combined_inference.xlsx"
+        filtered_df.to_excel(os.path.join(output_file, file_name), index=False)
+        print(f"Filtered data saved to {output_file}")
+    else:
+        print("No valid .xlsx files found in the folder.")
+
+
 def validate_path_exists(path: str, which_path: str):
     """
     Validate if the given path exists.
@@ -170,3 +207,11 @@ def run_full_inference(
                 print(f"Successfully SAVED resulting file at {output_file_path}")
             except Exception as e:
                 print(f"Error saving file {excel_name}: {e}")
+
+    combine_file_path = os.path.join(output_path, "combined_inference")
+    os.makedirs(combine_file_path, exist_ok=True)
+    combine_and_filter_xlsx_files(output_path, combine_file_path)
+    print(
+        "Successfully SAVED combined inference file for KPI DETECTION in ",
+        combine_file_path,
+    )

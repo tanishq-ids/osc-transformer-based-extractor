@@ -13,6 +13,8 @@ import os
 import shutil
 import pandas as pd
 import torch
+import json
+import time
 from transformers import (
     TrainingArguments,
     Trainer,
@@ -20,7 +22,7 @@ from transformers import (
     AutoTokenizer,
 )
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from torch.utils.data import Dataset
 
 
@@ -219,8 +221,23 @@ def fine_tune_model(
     checkpoint_dir = os.path.join(saved_model_path, "checkpoints")
     os.makedirs(saved_model_path, exist_ok=True)
 
+    def compute_metrics(pred):
+        predictions, labels = pred
+        predictions = predictions.argmax(axis=-1)
+        precision, recall, f1, _ = precision_recall_fscore_support(
+            labels, predictions, average="weighted"
+        )
+        acc = accuracy_score(labels, predictions)
+        return {
+            "accuracy": acc,
+            "f1": f1,
+            "precision": precision,
+            "recall": recall,
+        }
+
     training_args = TrainingArguments(
         output_dir=checkpoint_dir,
+        dataloader_pin_memory=False,
         evaluation_strategy="epoch",  # Evaluate at the end of each epoch
         logging_dir="./logs",  # Directory for logs
         logging_steps=10,  # Log every 10 steps
@@ -236,6 +253,7 @@ def fine_tune_model(
         metric_for_best_model="eval_loss",
         greater_is_better=False,
         save_total_limit=1,
+        seed=42,
     )
 
     # Initialize Trainer
@@ -244,11 +262,14 @@ def fine_tune_model(
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
+        compute_metrics=compute_metrics,
     )
 
+    start = time.time()
     # Start Training
     trainer.train()
-
+    end = time.time()
+    print("Time needed to train model =", end - start)
     # Save the final trained model and config
     trainer.save_model(saved_model_path)
 
@@ -260,6 +281,12 @@ def fine_tune_model(
     print("Evaluation results:")
     for key, value in eval_result.items():
         print(f"{key}: {value}")
+
+    with open(
+        os.path.join(output_dir, f"evaluation_results_{export_model_name}.json"), "w"
+    ) as json_file:
+        json.dump(eval_result, json_file, indent=4)
+    print("Evaluation results saved to 'evaluation_results.json'")
 
     # Predict labels for the evaluation dataset
     predictions = trainer.predict(eval_dataset)
