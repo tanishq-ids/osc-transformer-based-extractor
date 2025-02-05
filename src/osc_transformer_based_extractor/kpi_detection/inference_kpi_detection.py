@@ -64,9 +64,16 @@ def get_batch_inference_kpi_detection(
     Returns:
         list of dict: List of dictionaries containing answers, scores, and positions.
     """
-    results = question_answerer(
-        questions, contexts, batch_size=batch_size
-    )  # Adjust batch size as needed
+    # Combine questions and contexts into a list of dictionaries
+    inputs = [{"question": q, "context": c} for q, c in zip(questions, contexts)]
+
+    results = []
+    # Process in batches
+    for i in range(0, len(inputs), batch_size):
+        batch = inputs[i : i + batch_size]  # Get batch
+        batch_results = question_answerer(batch)  # Perform inference on the batch
+        results.extend(batch_results)
+
     return results
 
 

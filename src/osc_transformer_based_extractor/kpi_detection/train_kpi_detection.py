@@ -39,10 +39,10 @@ from sklearn.model_selection import train_test_split
 
 def check_csv_columns_kpi_detection(file_path):
     """
-    Check if the CSV file exists and contains the required columns.
+    Check if the CSV/Excel file exists and contains the required columns.
 
     Args:
-        file_path (str): Path to the CSV file.
+        file_path (str): Path to the CSV/Excel file.
 
     Raises:
         ValueError: If the file does not exist or does not contain the required columns.
@@ -53,18 +53,21 @@ def check_csv_columns_kpi_detection(file_path):
     required_columns = ["question", "context", "annotation_answer"]
 
     try:
-        df = pd.read_csv(file_path)
+        if file_path.endswith('.csv'):
+            df = pd.read_csv(file_path)
+        else:
+            df = pd.read_excel(file_path)
         missing_columns = [col for col in required_columns if col not in df.columns]
         if missing_columns:
             raise ValueError(
-                f"CSV file must contain the columns: {required_columns}. Missing columns: {missing_columns}"
+                f"CSV/Excel file must contain the columns: {required_columns}. Missing columns: {missing_columns}"
             )
     except pd.errors.EmptyDataError:
-        raise ValueError("CSV file is empty.")
+        raise ValueError("CSV/Excel file is empty.")
     except pd.errors.ParserError:
-        raise ValueError("Error parsing CSV file.")
+        raise ValueError("Error parsing CSV/Excel file.")
     except Exception as e:
-        raise ValueError(f"Error while checking CSV columns: {e}")
+        raise ValueError(f"Error while checking CSV/Excel columns: {e}")
 
 
 def check_output_dir(output_dir):
@@ -98,7 +101,7 @@ def train_kpi_detection(
     Fine-tune a pre-trained model on a custom dataset.
 
     Args:
-        data_path (str): Path to the CSV file containing the dataset.
+        data_path (str): Path to the CSV/Excel file containing the dataset.
         model_name (str): Name/path of the pre-trained model to use.
         max_length (int): Maximum length of the input sequences.
         epochs (int): Number of training epochs.
@@ -109,7 +112,11 @@ def train_kpi_detection(
         save_steps (int): Number of steps before saving the model during training.
     """
     # Load the data
-    df = pd.read_csv(data_path)
+    if data_path.endswith('.csv'):
+        df = pd.read_csv(data_path)
+    else:
+        df = pd.read_excel(data_path)
+
     df["annotation_answer"] = df["annotation_answer"].astype(str)
     df = df[["question", "context", "annotation_answer", "answer_start"]]
 

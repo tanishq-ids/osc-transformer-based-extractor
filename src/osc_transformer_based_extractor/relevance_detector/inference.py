@@ -26,6 +26,7 @@ def combine_and_filter_xlsx_files(folder_path, output_file):
                 # Read the Excel file into a DataFrame
                 df = pd.read_excel(file_path)
                 all_dataframes.append(df)
+                print("success")
             except Exception as e:
                 print(f"Error reading {file_name}: {e}")
     
