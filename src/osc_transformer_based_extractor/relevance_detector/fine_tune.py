@@ -224,7 +224,9 @@ def fine_tune_model(
     def compute_metrics(pred):
         predictions, labels = pred
         predictions = predictions.argmax(axis=-1)
-        precision, recall, f1, _ = precision_recall_fscore_support(labels, predictions, average="weighted")
+        precision, recall, f1, _ = precision_recall_fscore_support(
+            labels, predictions, average="weighted"
+        )
         acc = accuracy_score(labels, predictions)
         return {
             "accuracy": acc,
@@ -262,12 +264,12 @@ def fine_tune_model(
         eval_dataset=eval_dataset,
         compute_metrics=compute_metrics,
     )
-    
+
     start = time.time()
     # Start Training
     trainer.train()
     end = time.time()
-    print("Time needed to train model =", end-start)
+    print("Time needed to train model =", end - start)
     # Save the final trained model and config
     trainer.save_model(saved_model_path)
 
@@ -279,8 +281,10 @@ def fine_tune_model(
     print("Evaluation results:")
     for key, value in eval_result.items():
         print(f"{key}: {value}")
-    
-    with open(os.path.join(output_dir, f"evaluation_results_{export_model_name}.json"), "w") as json_file:
+
+    with open(
+        os.path.join(output_dir, f"evaluation_results_{export_model_name}.json"), "w"
+    ) as json_file:
         json.dump(eval_result, json_file, indent=4)
     print("Evaluation results saved to 'evaluation_results.json'")
 
