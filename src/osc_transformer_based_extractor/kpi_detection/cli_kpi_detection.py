@@ -73,7 +73,7 @@ def fine_tune_qna(
 @kpi_detection_app.command("inference")
 def inference_qna(
     data_file_path: str = typer.Argument(
-        ..., help="Path to the input CSV file containing the dataset."
+        ..., help="Path to the input CSV/Excel file containing the dataset."
     ),
     output_path: str = typer.Argument(
         ..., help="Path to the directory where the output Excel file will be saved."

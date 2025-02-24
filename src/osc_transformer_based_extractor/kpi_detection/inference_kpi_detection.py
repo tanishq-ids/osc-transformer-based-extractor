@@ -7,8 +7,34 @@ import torch
 import pandas as pd
 from pathlib import Path
 from tqdm import tqdm
-from transformers import pipeline, AutoConfig
+from transformers import pipeline, AutoConfig, AutoModelForCausalLM, AutoTokenizer
+from transformers import PreTrainedModel, PreTrainedTokenizer
 from transformers.pipelines import QuestionAnsweringPipeline
+import re
+
+
+torch.random.manual_seed(0)
+
+
+def extract_paragraph_number(text: str):
+    """
+    Extract the first number from a substring in the format 'Paragraph {num}'.
+
+    Args:
+        text (str): The input string.
+
+    Returns:
+        int or None: The extracted number, or None if no match is found.
+    """
+    # Regex pattern to match "Paragraph {num}"
+    pattern = r"Paragraph (\d+)"
+
+    # Search for the pattern
+    match = re.search(pattern, text)
+
+    if match:
+        return int(match.group(1))  # Extract and convert the number
+    return None
 
 
 def resolve_model_path(model_path: str):
@@ -64,9 +90,16 @@ def get_batch_inference_kpi_detection(
     Returns:
         list of dict: List of dictionaries containing answers, scores, and positions.
     """
-    results = question_answerer(
-        questions, contexts, batch_size=batch_size
-    )  # Adjust batch size as needed
+    # Combine questions and contexts into a list of dictionaries
+    inputs = [{"question": q, "context": c} for q, c in zip(questions, contexts)]
+
+    results = []
+    # Process in batches
+    for i in range(0, len(inputs), batch_size):
+        batch = inputs[i : i + batch_size]  # Get batch
+        batch_results = question_answerer(batch)  # Perform inference on the batch
+        results.append(batch_results)
+
     return results
 
 
@@ -80,7 +113,7 @@ def run_full_inference_kpi_detection(
     Runs full inference on a dataset of questions and contexts, and saves the results.
 
     Args:
-        data_file_path (str): Path to the input CSV file containing the dataset.
+        data_file_path (str): Path to the input CSV/Excel file containing the dataset.
             The dataset should have columns 'question' and 'context'.
         output_path (str): Path to the directory where the output Excel file will be saved.
         model_path (str): Path to the pre-trained model to be used for inference.
@@ -93,7 +126,10 @@ def run_full_inference_kpi_detection(
     output_path = str(Path(output_path))
     model_path = resolve_model_path(model_path)
 
-    data = pd.read_csv(data_file_path)
+    if data_file_path.endswith(".csv"):
+        data = pd.read_csv(data_file_path)
+    else:
+        data = pd.read_excel(data_file_path)
 
     if torch.cuda.is_available():
         device = torch.device("cuda")  # Use NVIDIA GPU
@@ -127,6 +163,7 @@ def run_full_inference_kpi_detection(
         )
 
         for result in batch_results:
+            print()
             results.append(
                 {
                     "predicted_answer": result["answer"],
@@ -138,7 +175,114 @@ def run_full_inference_kpi_detection(
 
     df = pd.DataFrame(results)
     combined_df = pd.concat([data, df], axis=1)
+    if "Unnamed: 0" in combined_df.columns:
+        combined_df.drop(columns=["Unnamed: 0"], inplace=True)
+    combined_df.sort_values(
+        by=["pdf_name", "kpi_id", "score"], inplace=True, ascending=[True, True, False]
+    )
+    combined_df = combined_df[
+        [
+            "pdf_name",
+            "question",
+            "predicted_answer",
+            "score",
+            "page",
+            "context",
+            "kpi_id",
+            "unique_paragraph_id",
+            "paragraph_relevance_score(for_label=1)",
+            "paragraph_relevance_flag",
+            "start",
+            "end",
+        ]
+    ]
+
+    authenticator_model = AutoModelForCausalLM.from_pretrained(
+        "microsoft/Phi-3.5-mini-instruct", torch_dtype="auto", trust_remote_code=True
+    ).to(device)
+
+    authenticator_tokenizer = AutoTokenizer.from_pretrained(
+        "microsoft/Phi-3.5-mini-instruct"
+    )
+    authenticated_df = llm_2fa(
+        combined_df, authenticator_model, authenticator_tokenizer, device
+    )
 
     file_name = Path(output_path) / "output.xlsx"
-    combined_df.to_excel(file_name, index=False)
+    authenticated_df.to_excel(file_name, index=False)
     print(f"Successfully SAVED resulting file at {file_name}")
+
+
+def llm_2fa(
+    df: pd.DataFrame,
+    authenticator_model: PreTrainedModel,
+    authenticator_tokenizer: PreTrainedTokenizer,
+    device: torch.device,
+) -> pd.DataFrame:
+    """
+    Processes a DataFrame of PDF-extracted questions and answers, uses an LLM-based authenticator
+    to select the most relevant paragraph-answer pair, and returns the most relevant results.
+
+    Args:
+        df (pd.DataFrame):
+            A DataFrame containing columns:
+            - 'pdf_name': Name of the PDF document.
+            - 'kpi_id': Unique identifier for the KPI.
+            - 'paragraph_relevance_score(for_label=1)': Relevance score for the paragraph.
+            - 'question': Question related to the KPI.
+            - 'context': Paragraph context from the PDF.
+            - 'predicted_answer': Answer predicted for the context.
+        authenticator_model (PreTrainedModel):
+            The language model used to evaluate paragraph-answer pairs.
+        authenticator_tokenizer (PreTrainedTokenizer):
+            Tokenizer associated with the language model.
+        device (torch.device):
+            Device to run the model on, e.g., 'cpu' or 'cuda'.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the most relevant paragraph-answer pair for each PDF and KPI.
+    """
+    result_rows = []
+
+    # Group by 'pdf_name' and 'kpi_id'
+    grouped = df.groupby(["pdf_name", "kpi_id"])
+
+    for (pdf_name, kpi_id), group in grouped:
+        group = group.sort_values(
+            by=["paragraph_relevance_score(for_label=1)"], ascending=False
+        ).head(4)
+        question = group["question"].iloc[0]
+
+        pairs = [
+            f"**Paragraph {i + 1}**: {p}\n   **Answer {i + 1}**: {a}\n"
+            for i, (p, a) in enumerate(zip(group["context"], group["predicted_answer"]))
+        ]
+        combined_pairs = "\n\n".join(pairs)
+
+        content = (
+            f"### Instruction:\n"
+            f"You are tasked with analyzing a question extracted from a PDF, along with multiple paragraph-answer pairs. "
+            f"Your task is to identify the **most relevant paragraph-answer pair** based on the given information and explain your reasoning.\n\n"
+            f"### Input:\n"
+            f"**Question**: {question}\n\n"
+            f"**Paragraph-Answer Pairs**:\n\n"
+            f"{combined_pairs}\n\n"
+            f"### Task:\n"
+            f"1. Identify which **paragraph-answer pair** is the most relevant.\n"
+            f"2. Give me the page number. \n\n"
+            f"3. Provide a clear and concise explanation for your choice, considering the content.\n\n"
+            f"### Response:\n"
+        )
+
+        inputs = authenticator_tokenizer(content, return_tensors="pt").to(device)
+        outputs = authenticator_model.generate(
+            **inputs, max_new_tokens=500, temperature=0.0, do_sample=False
+        )
+        output_text = authenticator_tokenizer.decode(
+            outputs[0], skip_special_tokens=True
+        )
+
+        num = extract_paragraph_number(output_text)
+        result_rows.append(group.iloc[num - 1])
+
+    return pd.DataFrame(result_rows).reset_index(drop=True)
