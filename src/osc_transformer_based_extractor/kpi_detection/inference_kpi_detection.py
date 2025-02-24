@@ -15,6 +15,7 @@ import re
 
 torch.random.manual_seed(0)
 
+
 def extract_paragraph_number(text: str):
     """
     Extract the first number from a substring in the format 'Paragraph {num}'.
@@ -34,7 +35,6 @@ def extract_paragraph_number(text: str):
     if match:
         return int(match.group(1))  # Extract and convert the number
     return None
-
 
 
 def resolve_model_path(model_path: str):
@@ -129,7 +129,7 @@ def run_full_inference_kpi_detection(
     if data_file_path.endswith(".csv"):
         data = pd.read_csv(data_file_path)
     else:
-        data = pd.read_excel(data_file_path) 
+        data = pd.read_excel(data_file_path)
 
     if torch.cuda.is_available():
         device = torch.device("cuda")  # Use NVIDIA GPU
@@ -179,19 +179,36 @@ def run_full_inference_kpi_detection(
     combined_df = pd.concat([data, df], axis=1)
     if "Unnamed: 0" in combined_df.columns:
         combined_df.drop(columns=["Unnamed: 0"], inplace=True)
-    combined_df.sort_values(by=["pdf_name", "kpi_id", "score"], inplace=True, ascending=[True, True, False])
-    combined_df = combined_df[['pdf_name', 'question', 'predicted_answer', 'score', 'page', 'context', 'kpi_id', 'unique_paragraph_id', 'paragraph_relevance_score(for_label=1)', 'paragraph_relevance_flag', 'start','end']]
-
-
+    combined_df.sort_values(
+        by=["pdf_name", "kpi_id", "score"], inplace=True, ascending=[True, True, False]
+    )
+    combined_df = combined_df[
+        [
+            "pdf_name",
+            "question",
+            "predicted_answer",
+            "score",
+            "page",
+            "context",
+            "kpi_id",
+            "unique_paragraph_id",
+            "paragraph_relevance_score(for_label=1)",
+            "paragraph_relevance_flag",
+            "start",
+            "end",
+        ]
+    ]
 
     authenticator_model = AutoModelForCausalLM.from_pretrained(
-        "microsoft/Phi-3.5-mini-instruct",
-        torch_dtype="auto",
-        trust_remote_code=True
+        "microsoft/Phi-3.5-mini-instruct", torch_dtype="auto", trust_remote_code=True
     ).to(device)
 
-    authenticator_tokenizer = AutoTokenizer.from_pretrained("microsoft/Phi-3.5-mini-instruct")
-    authenticated_df = llm_2fa(combined_df, authenticator_model, authenticator_tokenizer, device)
+    authenticator_tokenizer = AutoTokenizer.from_pretrained(
+        "microsoft/Phi-3.5-mini-instruct"
+    )
+    authenticated_df = llm_2fa(
+        combined_df, authenticator_model, authenticator_tokenizer, device
+    )
 
     file_name = Path(output_path) / "output.xlsx"
     authenticated_df.to_excel(file_name, index=False)
@@ -202,14 +219,14 @@ def llm_2fa(
     df: pd.DataFrame,
     authenticator_model: PreTrainedModel,
     authenticator_tokenizer: PreTrainedTokenizer,
-    device: torch.device
+    device: torch.device,
 ) -> pd.DataFrame:
     """
-    Processes a DataFrame of PDF-extracted questions and answers, uses an LLM-based authenticator 
+    Processes a DataFrame of PDF-extracted questions and answers, uses an LLM-based authenticator
     to select the most relevant paragraph-answer pair, and returns the most relevant results.
 
     Args:
-        df (pd.DataFrame): 
+        df (pd.DataFrame):
             A DataFrame containing columns:
             - 'pdf_name': Name of the PDF document.
             - 'kpi_id': Unique identifier for the KPI.
@@ -217,11 +234,11 @@ def llm_2fa(
             - 'question': Question related to the KPI.
             - 'context': Paragraph context from the PDF.
             - 'predicted_answer': Answer predicted for the context.
-        authenticator_model (PreTrainedModel): 
+        authenticator_model (PreTrainedModel):
             The language model used to evaluate paragraph-answer pairs.
-        authenticator_tokenizer (PreTrainedTokenizer): 
+        authenticator_tokenizer (PreTrainedTokenizer):
             Tokenizer associated with the language model.
-        device (torch.device): 
+        device (torch.device):
             Device to run the model on, e.g., 'cpu' or 'cuda'.
 
     Returns:
@@ -230,15 +247,17 @@ def llm_2fa(
     result_rows = []
 
     # Group by 'pdf_name' and 'kpi_id'
-    grouped = df.groupby(['pdf_name', 'kpi_id'])
+    grouped = df.groupby(["pdf_name", "kpi_id"])
 
     for (pdf_name, kpi_id), group in grouped:
-        group = group.sort_values(by=['paragraph_relevance_score(for_label=1)'], ascending=False).head(4)
-        question = group['question'].iloc[0]
+        group = group.sort_values(
+            by=["paragraph_relevance_score(for_label=1)"], ascending=False
+        ).head(4)
+        question = group["question"].iloc[0]
 
         pairs = [
-            f"**Paragraph {i+1}**: {p}\n   **Answer {i+1}**: {a}\n"
-            for i, (p, a) in enumerate(zip(group['context'], group['predicted_answer']))
+            f"**Paragraph {i + 1}**: {p}\n   **Answer {i + 1}**: {a}\n"
+            for i, (p, a) in enumerate(zip(group["context"], group["predicted_answer"]))
         ]
         combined_pairs = "\n\n".join(pairs)
 
@@ -258,11 +277,14 @@ def llm_2fa(
         )
 
         inputs = authenticator_tokenizer(content, return_tensors="pt").to(device)
-        outputs = authenticator_model.generate(**inputs, max_new_tokens=500, temperature=0.0, do_sample=False)
-        output_text = authenticator_tokenizer.decode(outputs[0], skip_special_tokens=True)
+        outputs = authenticator_model.generate(
+            **inputs, max_new_tokens=500, temperature=0.0, do_sample=False
+        )
+        output_text = authenticator_tokenizer.decode(
+            outputs[0], skip_special_tokens=True
+        )
 
         num = extract_paragraph_number(output_text)
-        result_rows.append(group.iloc[num-1])
+        result_rows.append(group.iloc[num - 1])
 
     return pd.DataFrame(result_rows).reset_index(drop=True)
-    

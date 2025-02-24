@@ -53,7 +53,7 @@ def check_csv_columns_kpi_detection(file_path):
     required_columns = ["question", "context", "annotation_answer"]
 
     try:
-        if file_path.endswith('.csv'):
+        if file_path.endswith(".csv"):
             df = pd.read_csv(file_path)
         else:
             df = pd.read_excel(file_path)
@@ -112,7 +112,7 @@ def train_kpi_detection(
         save_steps (int): Number of steps before saving the model during training.
     """
     # Load the data
-    if data_path.endswith('.csv'):
+    if data_path.endswith(".csv"):
         df = pd.read_csv(data_path)
     else:
         df = pd.read_excel(data_path)
