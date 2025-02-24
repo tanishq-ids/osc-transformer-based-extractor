@@ -144,8 +144,6 @@ def run_full_inference_kpi_detection(
     # Initialize the question-answering pipeline
     question_answerer = pipeline("question-answering", model=model_path, device=device)
 
-    data
-
     results = []
 
     # Process in batches
