@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 import torch
 import pandas as pd
 import json
@@ -36,10 +37,12 @@ def combine_and_filter_xlsx_files(folder_path, output_file):
 
         # Filter rows where paragraph_relevance_flag is 1
         filtered_df = combined_df[combined_df["paragraph_relevance_flag"] == 1]
+        filtered_df.rename(columns={'paragraph':'context'}, inplace=True)     
 
-        # Save the filtered DataFrame to an Excel file
-        file_name = "combined_inference.xlsx"
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        file_name = f"combined_inference_{timestamp}.xlsx"
         filtered_df.to_excel(os.path.join(output_file, file_name), index=False)
+
         print(f"Filtered data saved to {output_file}")
     else:
         print("No valid .xlsx files found in the folder.")
