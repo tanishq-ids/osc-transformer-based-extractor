@@ -204,9 +204,7 @@ def run_full_inference_kpi_detection(
     verifier_tokenizer = AutoTokenizer.from_pretrained(
         "microsoft/Phi-3.5-mini-instruct"
     )
-    verified_df = llm_2fv(
-        combined_df, verifier_model, verifier_tokenizer, device
-    )
+    verified_df = llm_2fv(combined_df, verifier_model, verifier_tokenizer, device)
 
     file_name = Path(output_path) / "output.xlsx"
     verified_df.to_excel(file_name, index=False)
@@ -278,9 +276,7 @@ def llm_2fv(
         outputs = verifier_model.generate(
             **inputs, max_new_tokens=500, temperature=0.0, do_sample=False
         )
-        output_text = verifier_tokenizer.decode(
-            outputs[0], skip_special_tokens=True
-        )
+        output_text = verifier_tokenizer.decode(outputs[0], skip_special_tokens=True)
 
         num = extract_paragraph_number(output_text)
         result_rows.append(group.iloc[num - 1])
